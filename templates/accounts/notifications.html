@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold text-light mb-0">
+                    <i class="bi bi-bell text-danger me-2"></i> In-App Notifications
+                </h3>
+                <span class="badge bg-secondary">{{ notifications.count }} total</span>
+            </div>
+
+            {% if notifications %}
+                <div class="d-flex flex-column gap-3">
+                    {% for notif in notifications %}
+                        <div class="card bg-dark border-secondary rounded-4 p-3 shadow-sm {% if not notif.is_read %}border-danger{% endif %}">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="rounded-circle p-2 d-flex align-items-center justify-content-center text-white" 
+                                     style="width: 40px; height: 40px; background-color: {% if notif.notification_type == 'SUCCESS' %}#10B981{% elif notif.notification_type == 'WARNING' %}#F59E0B{% elif notif.notification_type == 'TICKET' %}#E50914{% else %}#3B82F6{% endif %};">
+                                    {% if notif.notification_type == 'TICKET' %}
+                                        <i class="bi bi-ticket-detailed-fill"></i>
+                                    {% elif notif.notification_type == 'SUCCESS' %}
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    {% elif notif.notification_type == 'WARNING' %}
+                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                    {% else %}
+                                        <i class="bi bi-info-circle-fill"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="fw-bold text-light mb-0">{{ notif.title }}</h6>
+                                        <small class="text-secondary">{{ notif.created_at|timesince }} ago</small>
+                                    </div>
+                                    <p class="text-secondary small mb-0">{{ notif.message }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 card bg-dark border-secondary rounded-4">
+                    <i class="bi bi-bell-slash text-secondary fs-1 mb-3"></i>
+                    <h5 class="text-light">No Notifications</h5>
+                    <p class="text-secondary small">You will see booking confirmations, ticket releases, and offers here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

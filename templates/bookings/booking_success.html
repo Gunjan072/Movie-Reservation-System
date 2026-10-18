@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Booking Confirmed – {{ booking.booking_id }} | CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <!-- Success Alert Banner -->
+            <div class="text-center mb-4">
+                <div class="d-inline-flex p-3 rounded-circle bg-success text-white mb-3 shadow-lg">
+                    <i class="bi bi-check-lg" style="font-size: 3rem;"></i>
+                </div>
+                <h2 class="fw-bold text-light mb-1">Payment Successful & Booking Confirmed!</h2>
+                <p class="text-secondary small">Your digital tickets have been issued. A confirmation alert was dispatched to your account.</p>
+            </div>
+
+            <!-- Digital Movie Ticket Card -->
+            <div class="ticket-container bg-dark border-secondary rounded-4 shadow-lg mb-4 overflow-hidden position-relative">
+                <div class="ticket-notch-left"></div>
+                <div class="ticket-notch-right"></div>
+
+                <!-- Ticket Header -->
+                <div class="p-4 p-md-5 border-bottom border-secondary border-dashed" style="background-color: #161F30;">
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div>
+                            <span class="badge bg-danger text-uppercase mb-2">{{ booking.show.format }} • {{ booking.show.language }}</span>
+                            <h2 class="fw-bold text-light mb-1">{{ booking.show.movie.title }}</h2>
+                            <p class="text-secondary small mb-0">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ booking.show.screen.cinema.name }} | 
+                                <strong>{{ booking.show.screen.name }}</strong>
+                            </p>
+                        </div>
+                        <div class="text-md-end">
+                            <span class="text-secondary small d-block">Booking Reference</span>
+                            <span class="font-monospace text-warning fw-bold fs-5">{{ booking.booking_id }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ticket Body Specs -->
+                <div class="p-4 p-md-5">
+                    <div class="row g-4 align-items-center">
+                        <!-- Show Details -->
+                        <div class="col-md-7">
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <span class="text-secondary small d-block">Show Date</span>
+                                    <span class="text-light fw-bold fs-6">{{ booking.show.date|date:"D, d M Y" }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-secondary small d-block">Show Time</span>
+                                    <span class="text-warning fw-bold fs-6">{{ booking.show.start_time|time:"h:i A" }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-secondary small d-block">Reserved Seats</span>
+                                    <span class="text-light fw-bold fs-5">{{ booking.seat_labels }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <span class="text-secondary small d-block">Customer</span>
+                                    <span class="text-light fw-semibold">{{ booking.user.get_full_name|default:booking.user.username }}</span>
+                                </div>
+                            </div>
+
+                            <div class="p-3 rounded-3 bg-black border border-secondary small text-secondary">
+                                <div><strong class="text-light">Transaction ID:</strong> <span class="font-monospace">{{ booking.payment.transaction_id }}</span></div>
+                                <div><strong class="text-light">Payment Method:</strong> {{ booking.payment.get_payment_method_display }}</div>
+                                <div><strong class="text-light">Total Paid:</strong> ₹{{ booking.final_amount }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Cryptographic QR Pass -->
+                        <div class="col-md-5 text-center">
+                            <div class="p-3 bg-white rounded-3 d-inline-block shadow">
+                                {% if booking.ticket.qr_code %}
+                                    <img src="{{ booking.ticket.qr_code.url }}" width="150" height="150" alt="Ticket QR">
+                                {% else %}
+                                    <i class="bi bi-qr-code text-dark" style="font-size: 8rem;"></i>
+                                {% endif %}
+                            </div>
+                            <div class="mt-2 font-monospace small text-secondary">
+                                Pass Code: {{ booking.ticket.verification_code|slice:":10" }}
+                            </div>
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">Scan at cinema turnstile for entry</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ticket Footer Action Bar -->
+                <div class="p-3 bg-black border-top border-secondary text-center d-flex flex-wrap justify-content-center gap-3">
+                    <a href="{% url 'bookings:download_ticket_pdf' booking.booking_id %}" class="btn btn-cinema-primary btn-sm px-4">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Download PDF Ticket
+                    </a>
+                    <button onclick="window.print()" class="btn btn-outline-light btn-sm px-3">
+                        <i class="bi bi-printer-fill me-1"></i> Print Ticket
+                    </button>
+                    <a href="{% url 'bookings:my_bookings' %}" class="btn btn-cinema-outline btn-sm px-3">
+                        <i class="bi bi-ticket-perforated me-1"></i> My Bookings
+                    </a>
+                    <a href="{% url 'home' %}" class="btn btn-dark border-secondary btn-sm px-3">
+                        <i class="bi bi-house me-1"></i> Home
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Checkout Payment – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="card bg-dark border-secondary rounded-4 shadow-lg overflow-hidden">
+                <div class="card-header bg-gradient p-4 border-secondary d-flex justify-content-between align-items-center" style="background-color: #161F30;">
+                    <div>
+                        <h4 class="fw-bold text-light mb-0"><i class="bi bi-shield-check text-success me-2"></i> 256-Bit Secure Payment</h4>
+                        <small class="text-secondary">Simulated Academic Payment Gateway</small>
+                    </div>
+                    <div class="text-end">
+                        <span class="fs-4 fw-bold text-danger">₹{{ final_total }}</span>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <!-- Quick Order Summary -->
+                    <div class="p-3 rounded-3 bg-black border border-secondary mb-4 d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-light fw-bold">{{ show.movie.title }}</div>
+                            <small class="text-secondary">{{ show.screen.cinema.name }} • {{ show.date|date:"d M" }} at {{ show.start_time|time:"h:i A" }}</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-secondary">{{ show_seats.count }} Seats</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Methods Tabs -->
+                    <ul class="nav nav-pills nav-fill bg-black p-2 rounded-3 border border-secondary mb-4" id="paymentTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active text-light" id="upi-tab" data-bs-toggle="tab" data-bs-target="#upi-pane" type="button" role="tab">
+                                <i class="bi bi-qr-code-scan me-1 text-danger"></i> UPI / QR
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-light" id="card-tab" data-bs-toggle="tab" data-bs-target="#card-pane" type="button" role="tab">
+                                <i class="bi bi-credit-card me-1 text-info"></i> Cards
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-light" id="netbanking-tab" data-bs-toggle="tab" data-bs-target="#netbanking-pane" type="button" role="tab">
+                                <i class="bi bi-bank me-1 text-warning"></i> Net Banking
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link text-light" id="wallet-tab" data-bs-toggle="tab" data-bs-target="#wallet-pane" type="button" role="tab">
+                                <i class="bi bi-wallet2 me-1 text-success"></i> Wallets
+                            </button>
+                        </li>
+                    </ul>
+
+                    <form id="paymentForm" action="{% url 'bookings:process_payment' %}" method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="payment_method" id="selectedPaymentMethod" value="UPI">
+                        <input type="hidden" name="payment_action" id="paymentAction" value="SUCCESS">
+
+                        <div class="tab-content mb-4" id="paymentTabContent">
+                            <!-- 1. UPI Tab -->
+                            <div class="tab-pane fade show active text-center p-3" id="upi-pane" role="tabpanel">
+                                <div class="p-3 bg-black border border-secondary rounded-3 d-inline-block mb-3">
+                                    <i class="bi bi-qr-code text-light" style="font-size: 8rem;"></i>
+                                    <div class="small text-secondary mt-1">Scan using any UPI App</div>
+                                </div>
+                                <div class="row justify-content-center">
+                                    <div class="col-md-6">
+                                        <div class="input-group mb-2">
+                                            <input type="text" class="form-control bg-dark text-light border-secondary" placeholder="username@upi" value="customer@okhdfcbank">
+                                            <button class="btn btn-outline-secondary" type="button">Verify</button>
+                                        </div>
+                                        <small class="text-secondary">Accepts Google Pay, PhonePe, Paytm, BHIM</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2. Card Tab -->
+                            <div class="tab-pane fade p-3" id="card-pane" role="tabpanel">
+                                <div class="mb-3">
+                                    <label class="form-label text-light small fw-bold">Card Number</label>
+                                    <input type="text" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="4532 •••• •••• 8892" maxlength="19" value="4532 8901 2345 8892">
+                                </div>
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label text-light small fw-bold">Valid Thru</label>
+                                        <input type="text" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="MM/YY" value="08/28">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-light small fw-bold">CVV (Never Stored)</label>
+                                        <input type="password" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="•••" maxlength="4" value="123">
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label text-light small fw-bold">Name on Card</label>
+                                    <input type="text" class="form-control bg-dark text-light border-secondary" value="{{ user.get_full_name|default:user.username }}">
+                                </div>
+                                <small class="text-secondary d-block mt-2">
+                                    <i class="bi bi-shield-lock-fill text-success me-1"></i> Strictly PCI-DSS compliant. Full card data is never persisted on CineReserve servers.
+                                </small>
+                            </div>
+
+                            <!-- 3. Net Banking Tab -->
+                            <div class="tab-pane fade p-3" id="netbanking-pane" role="tabpanel">
+                                <label class="form-label text-light small fw-bold mb-3">Select Popular Bank</label>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6 col-md-3">
+                                        <button type="button" class="btn btn-outline-secondary w-100 py-2 small active">HDFC Bank</button>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <button type="button" class="btn btn-outline-secondary w-100 py-2 small">ICICI Bank</button>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <button type="button" class="btn btn-outline-secondary w-100 py-2 small">SBI</button>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <button type="button" class="btn btn-outline-secondary w-100 py-2 small">Axis Bank</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. Digital Wallet Tab -->
+                            <div class="tab-pane fade p-3" id="wallet-pane" role="tabpanel">
+                                <label class="form-label text-light small fw-bold mb-3">Select Digital Wallet</label>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="form-check p-3 bg-black border border-secondary rounded-3">
+                                        <input class="form-check-input ms-0 me-3" type="radio" name="wallet_opt" id="w1" checked>
+                                        <label class="form-check-label text-light" for="w1">Paytm Wallet</label>
+                                    </div>
+                                    <div class="form-check p-3 bg-black border border-secondary rounded-3">
+                                        <input class="form-check-input ms-0 me-3" type="radio" name="wallet_opt" id="w2">
+                                        <label class="form-check-label text-light" for="w2">Amazon Pay Balance</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Academic Simulation Buttons -->
+                        <div class="p-3 bg-black rounded-3 border border-secondary mb-4">
+                            <div class="small text-warning fw-bold mb-2">
+                                <i class="bi bi-mortarboard-fill me-1"></i> Academic Capstone Simulation Mode:
+                            </div>
+                            <div class="d-flex flex-column flex-sm-row gap-3">
+                                <button type="button" class="btn btn-success flex-grow-1 py-3 fw-bold" onclick="submitSimulation('SUCCESS')">
+                                    <i class="bi bi-check-circle-fill me-2"></i> Complete Payment (₹{{ final_total }})
+                                </button>
+                                <button type="button" class="btn btn-outline-danger py-3" onclick="submitSimulation('FAILED')">
+                                    <i class="bi bi-x-circle-fill me-1"></i> Test Payment Failure
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function submitSimulation(action) {
+        document.getElementById('paymentAction').value = action;
+        
+        // Track active tab for payment method
+        const activeTab = document.querySelector('#paymentTabs .nav-link.active');
+        if (activeTab.id === 'card-tab') {
+            document.getElementById('selectedPaymentMethod').value = 'CARD';
+        } else if (activeTab.id === 'netbanking-tab') {
+            document.getElementById('selectedPaymentMethod').value = 'NETBANKING';
+        } else if (activeTab.id === 'wallet-tab') {
+            document.getElementById('selectedPaymentMethod').value = 'WALLET';
+        } else {
+            document.getElementById('selectedPaymentMethod').value = 'UPI';
+        }
+
+        document.getElementById('paymentForm').submit();
+    }
+</script>
+{% endblock %}

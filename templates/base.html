@@ -1,0 +1,350 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CineReserve – Smart Movie Reservation & Cinema Management{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- CineReserve Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-cinema sticky-top">
+        <div class="container-xl">
+            <!-- Brand -->
+            <a class="navbar-brand brand-logo d-flex align-items-center gap-2" href="{% url 'home' %}">
+                <i class="bi bi-film text-danger fs-3"></i>
+                <span>Cine</span>Reserve
+            </a>
+
+            <!-- Mobile Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Navbar Links & Search -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}"><i class="bi bi-house-door me-1"></i> Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'movies:movie_list' %}"><i class="bi bi-play-circle me-1"></i> Movies</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'cinemas:cinema_list' %}"><i class="bi bi-geo-alt me-1"></i> Cinemas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'bookings:offers' %}"><i class="bi bi-tag me-1"></i> Offers</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'bookings:about' %}"><i class="bi bi-info-circle me-1"></i> About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'recommendations:recommended' %}"><i class="bi bi-stars text-warning me-1"></i> For You</a>
+                    </li>
+                </ul>
+
+                <!-- Global Search Bar -->
+                <form class="d-flex me-lg-3 my-2 my-lg-0 position-relative" action="{% url 'movies:movie_list' %}" method="GET">
+                    <div class="input-group">
+                        <span class="input-group-text bg-dark border-secondary text-secondary">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input class="form-control bg-dark text-light border-secondary" type="search" name="q" id="globalSearchInput" placeholder="Search movies, actors, genres..." aria-label="Search" value="{{ request.GET.q }}" autocomplete="off">
+                    </div>
+                    <div id="searchSuggestBox" class="dropdown-menu dropdown-menu-dark w-100 shadow mt-1 p-0" style="display:none; max-height: 320px; overflow:auto;"></div>
+                </form>
+
+                <!-- User Controls -->
+                <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+                    {% if user.is_authenticated %}
+                        <!-- Notifications Bell -->
+                        <a href="{% url 'accounts:notifications' %}" class="btn btn-outline-secondary position-relative border-0 text-light px-2" title="Notifications">
+                            <i class="bi bi-bell fs-5"></i>
+                            {% if unread_notifications_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    {{ unread_notifications_count }}
+                                </span>
+                            {% endif %}
+                        </a>
+
+                        <!-- User Profile Dropdown -->
+                        <div class="dropdown">
+                            <button class="btn btn-dark border-secondary dropdown-toggle d-flex align-items-center gap-2 py-1 px-2" type="button" data-bs-toggle="dropdown">
+                                {% if user.profile_picture %}
+                                    <img src="{{ user.profile_picture.url }}" class="rounded-circle" width="28" height="28" alt="User">
+                                {% else %}
+                                    <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center" style="width: 28px; height: 28px; font-weight: 700; font-size: 0.8rem;">
+                                        {{ user.username|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
+                                <span class="d-none d-md-inline small font-monospace">{{ user.username }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end shadow">
+                                <li class="px-3 py-1">
+                                    <div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
+                                    <small class="text-secondary">{{ user.get_role_display }}</small>
+                                </li>
+                                <li><hr class="dropdown-divider border-secondary"></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person me-2"></i> My Profile</a></li>
+                                <li><a class="dropdown-item" href="{% url 'bookings:my_bookings' %}"><i class="bi bi-ticket-perforated me-2"></i> My Bookings</a></li>
+                                <li><a class="dropdown-item" href="{% url 'movies:wishlist' %}"><i class="bi bi-heart me-2"></i> Wishlist</a></li>
+                                
+                                {% if user.is_admin_user %}
+                                    <li><hr class="dropdown-divider border-secondary"></li>
+                                    <li><a class="dropdown-item text-warning" href="{% url 'dashboard:admin_dashboard' %}"><i class="bi bi-speedometer2 me-2"></i> Admin Portal</a></li>
+                                {% elif user.is_cinema_manager %}
+                                    <li><hr class="dropdown-divider border-secondary"></li>
+                                    <li><a class="dropdown-item text-info" href="{% url 'dashboard:manager_dashboard' %}"><i class="bi bi-building me-2"></i> Manager Portal</a></li>
+                                {% endif %}
+
+                                <li><hr class="dropdown-divider border-secondary"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'accounts:login' %}" class="btn btn-cinema-outline btn-sm">Login</a>
+                        <a href="{% url 'accounts:register' %}" class="btn btn-cinema-primary btn-sm">Sign Up</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="container-xl mt-3">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Floating AI Chatbot Widget -->
+    <button class="chatbot-bubble-btn" id="chatbotToggleBtn" title="Ask CineBot Assistant">
+        <i class="bi bi-robot fs-3"></i>
+    </button>
+
+    <div class="chatbot-window" id="chatbotWindow">
+        <div class="p-3 bg-dark border-bottom border-secondary d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <div class="rounded-circle bg-danger p-2 text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold">CineBot AI Assistant</h6>
+                    <small class="text-success"><i class="bi bi-circle-fill" style="font-size: 8px;"></i> Online</small>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-link text-secondary text-decoration-none" id="chatbotCloseBtn">
+                <i class="bi bi-x-lg fs-5"></i>
+            </button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-bubble bot">
+                👋 Hello! I am your <strong>CineReserve AI Assistant</strong>. How can I help you today?
+                <div class="mt-2 d-flex flex-wrap gap-1">
+                    <span class="badge bg-secondary cursor-pointer chat-quick-prompt" onclick="sendQuickPrompt('What movies are showing today?')">Movies today</span>
+                    <span class="badge bg-secondary cursor-pointer chat-quick-prompt" onclick="sendQuickPrompt('Recommend a movie')">Recommend movie</span>
+                    <span class="badge bg-secondary cursor-pointer chat-quick-prompt" onclick="sendQuickPrompt('Cancellation policy')">Refund rules</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-2 border-top border-secondary bg-dark">
+            <form id="chatForm" class="d-flex gap-2">
+                <input type="text" id="chatInput" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Ask about shows, tickets..." autocomplete="off">
+                <button type="submit" class="btn btn-danger btn-sm px-3"><i class="bi bi-send-fill"></i></button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Professional Cinema Footer -->
+    <footer class="mt-5 py-5">
+        <div class="container-xl">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="brand-logo text-light mb-3">
+                        <i class="bi bi-film text-danger"></i> <span>Cine</span>Reserve
+                    </h5>
+                    <p class="small text-secondary mb-3">
+                        Next-generation cinema reservation platform offering real-time seat locking, dynamic concurrency management, cryptographic QR ticketing, and AI-powered personalized movie recommendations.
+                    </p>
+                    <div class="d-flex gap-3 text-secondary fs-5">
+                        <a href="#" class="text-secondary hover-danger"><i class="bi bi-facebook"></i></a>
+                        <a href="#" class="text-secondary hover-danger"><i class="bi bi-instagram"></i></a>
+                        <a href="#" class="text-secondary hover-danger"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#" class="text-secondary hover-danger"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+
+                <div class="col-lg-2 col-md-6 col-6">
+                    <h6 class="text-light fw-bold mb-3">Explore</h6>
+                    <ul class="list-unstyled small text-secondary d-flex flex-column gap-2">
+                        <li><a href="{% url 'movies:movie_list' %}" class="text-decoration-none text-secondary">Now Showing</a></li>
+                        <li><a href="{% url 'movies:movie_list' %}?status=COMING_SOON" class="text-decoration-none text-secondary">Coming Soon</a></li>
+                        <li><a href="{% url 'cinemas:cinema_list' %}" class="text-decoration-none text-secondary">Cinemas & Venues</a></li>
+                        <li><a href="{% url 'bookings:offers' %}" class="text-decoration-none text-secondary">Promotions & Coupons</a></li>
+                        <li><a href="{% url 'recommendations:recommended' %}" class="text-decoration-none text-secondary">AI Recommendations</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-6">
+                    <h6 class="text-light fw-bold mb-3">Help & Policies</h6>
+                    <ul class="list-unstyled small text-secondary d-flex flex-column gap-2">
+                        <li><a href="{% url 'bookings:terms' %}" class="text-decoration-none text-secondary">Terms & Conditions</a></li>
+                        <li><a href="{% url 'bookings:privacy' %}" class="text-decoration-none text-secondary">Privacy Policy</a></li>
+                        <li><a href="{% url 'bookings:refund_policy' %}" class="text-decoration-none text-secondary">Cancellation & Refunds</a></li>
+                        <li><a href="{% url 'bookings:about' %}" class="text-decoration-none text-secondary">About</a></li>
+                        <li><a href="{% url 'bookings:faq' %}" class="text-decoration-none text-secondary">FAQs & Support</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-light fw-bold mb-3">Project Capstone</h6>
+                    <p class="small text-secondary mb-2">
+                        <strong>CineReserve</strong> is developed as an academic BCA AIML Capstone project demonstrating enterprise Django, concurrency locking, and Scikit-Learn recommendations.
+                    </p>
+                    <div class="p-2 rounded bg-dark border border-secondary small text-muted">
+                        <div><i class="bi bi-mortarboard text-danger me-1"></i> BCA AIML Final Year</div>
+                        <div><i class="bi bi-code-slash text-info me-1"></i> Python 3 • Django • Scikit-Learn</div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-secondary my-4">
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-secondary">
+                <div>&copy; 2026 CineReserve Inc. All Rights Reserved.</div>
+                <div>Designed for High-Concurrency Ticket Reservations & Cinema Management.</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Global Chatbot Client Script -->
+    <script>
+        const chatToggleBtn = document.getElementById('chatbotToggleBtn');
+        const chatCloseBtn = document.getElementById('chatbotCloseBtn');
+        const chatWindow = document.getElementById('chatbotWindow');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+
+        chatToggleBtn.addEventListener('click', () => {
+            chatWindow.classList.toggle('active');
+            if (chatWindow.classList.contains('active')) {
+                chatInput.focus();
+            }
+        });
+
+        chatCloseBtn.addEventListener('click', () => {
+            chatWindow.classList.remove('active');
+        });
+
+        function appendMessage(text, isUser = false) {
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${isUser ? 'user' : 'bot'}`;
+            bubble.innerHTML = text;
+            chatMessages.appendChild(bubble);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendQuickPrompt(promptText) {
+            chatInput.value = promptText;
+            chatForm.dispatchEvent(new Event('submit'));
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            appendMessage(message, true);
+            chatInput.value = '';
+
+            try {
+                const response = await fetch('/chatbot/api/message/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                const data = await response.json();
+                appendMessage(data.reply);
+            } catch (err) {
+                appendMessage("Sorry, I could not process your query at this moment. Please try again.");
+            }
+        });
+
+        const searchInput = document.getElementById('globalSearchInput');
+        const suggestBox = document.getElementById('searchSuggestBox');
+        let suggestTimer = null;
+        if (searchInput && suggestBox) {
+            searchInput.addEventListener('input', () => {
+                clearTimeout(suggestTimer);
+                const q = searchInput.value.trim();
+                if (q.length < 2) {
+                    suggestBox.style.display = 'none';
+                    return;
+                }
+                suggestTimer = setTimeout(async () => {
+                    const res = await fetch(`/movies/api/search/?q=${encodeURIComponent(q)}`);
+                    const data = await res.json();
+                    const items = [];
+                    (data.movies || []).forEach(m => {
+                        items.push(`<a class="dropdown-item" href="/movies/${m.slug}/">${m.title} <small class="text-secondary">${m.language}</small></a>`);
+                    });
+                    (data.cinemas || []).forEach(c => {
+                        items.push(`<a class="dropdown-item" href="/cinemas/${c.slug}/">${c.name} <small class="text-secondary">${c.city}</small></a>`);
+                    });
+                    (data.genres || []).forEach(g => {
+                        items.push(`<a class="dropdown-item" href="/movies/?genre=${g.slug}">Genre: ${g.name}</a>`);
+                    });
+                    (data.actors || []).forEach(a => {
+                        items.push(`<a class="dropdown-item" href="/movies/?q=${encodeURIComponent(a.name)}">Actor: ${a.name}</a>`);
+                    });
+                    suggestBox.innerHTML = items.join('') || '<div class="dropdown-item text-secondary">No matches</div>';
+                    suggestBox.style.display = 'block';
+                }, 200);
+            });
+            document.addEventListener('click', (e) => {
+                if (!suggestBox.contains(e.target) && e.target !== searchInput) {
+                    suggestBox.style.display = 'none';
+                }
+            });
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

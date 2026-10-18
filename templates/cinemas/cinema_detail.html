@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ cinema.name }} – Schedules & Screens | CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+    <!-- Cinema Venue Info Card -->
+    <div class="card bg-dark border-secondary rounded-4 p-4 p-md-5 mb-5 shadow-lg">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3">
+            <div>
+                <span class="badge bg-danger mb-2"><i class="bi bi-geo-alt-fill me-1"></i>{{ cinema.city }}, {{ cinema.state }}</span>
+                <h1 class="display-5 fw-bold text-light mb-2">{{ cinema.name }}</h1>
+                <p class="text-secondary mb-3 fs-6">{{ cinema.address }} • PIN: {{ cinema.postal_code }}</p>
+                
+                <div class="d-flex flex-wrap gap-3 text-secondary small">
+                    <span><i class="bi bi-telephone-fill text-danger me-1"></i> {{ cinema.contact_number }}</span>
+                    {% if cinema.email %}
+                        <span><i class="bi bi-envelope-fill text-info me-1"></i> {{ cinema.email }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Facilities Pill Box -->
+            <div class="p-3 bg-black border border-secondary rounded-3" style="max-width: 380px;">
+                <div class="text-warning small fw-bold mb-2"><i class="bi bi-stars me-1"></i> Theater Facilities</div>
+                <div class="d-flex flex-wrap gap-1">
+                    {% for fac in cinema.facilities_list %}
+                        <span class="badge bg-secondary text-light small">{{ fac }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Movies & Showtimes at this Cinema -->
+    <div class="mb-5">
+        <h3 class="fw-bold text-light mb-4">Now Showing at {{ cinema.name }}</h3>
+
+        {% if movies_with_shows %}
+            <div class="d-flex flex-column gap-4">
+                {% for movie, shows_list in movies_with_shows.items %}
+                    <div class="card bg-dark border-secondary rounded-4 p-4 shadow">
+                        <div class="row g-4 align-items-center">
+                            <!-- Movie Poster & Details -->
+                            <div class="col-lg-3 col-md-4">
+                                <div class="d-flex gap-3 align-items-center">
+                                    <div style="width: 75px; height: 105px; flex-shrink: 0; background: #1e293b;" class="rounded overflow-hidden">
+                                        {% if movie.poster %}
+                                            <img src="{{ movie.poster.url }}" class="w-100 h-100 object-fit-cover" alt="{{ movie.title }}">
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold text-light mb-1">
+                                            <a href="{% url 'movies:movie_detail' movie.slug %}" class="text-light text-decoration-none hover-danger">
+                                                {{ movie.title }}
+                                            </a>
+                                        </h5>
+                                        <div class="text-secondary small mb-1">{{ movie.language }} • {{ movie.formatted_duration }}</div>
+                                        <div class="text-warning small"><i class="bi bi-star-fill me-1"></i>{{ movie.rating }}/10</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Showtimes Grid -->
+                            <div class="col-lg-9 col-md-8">
+                                <div class="d-flex flex-wrap gap-3">
+                                    {% for show in shows_list %}
+                                        <a href="{% url 'shows:seat_layout' show.id %}" class="text-decoration-none p-3 rounded-3 bg-black border border-secondary text-center hover-shadow transition" style="min-width: 140px;">
+                                            <div class="badge bg-danger mb-1">{{ show.format }}</div>
+                                            <div class="text-light fw-bold fs-5">{{ show.start_time|time:"h:i A" }}</div>
+                                            <div class="text-secondary small">{{ show.screen.name }}</div>
+                                            <div class="text-warning small fw-bold mt-1">₹{{ show.base_price|floatformat:0 }}</div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card bg-dark border-secondary rounded-4 p-5 text-center">
+                <i class="bi bi-calendar-x text-secondary fs-1 mb-3"></i>
+                <h5 class="text-light">No shows currently scheduled at this multiplex</h5>
+                <p class="text-secondary small">Check back later or view upcoming listings on the movies page.</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

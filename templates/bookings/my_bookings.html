@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Bookings – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-light mb-1"><i class="bi bi-ticket-perforated-fill text-danger me-2"></i> My Bookings</h2>
+            <p class="text-secondary small mb-0">Manage your cinema reservations, download digital passes, or process cancellations.</p>
+        </div>
+    </div>
+
+    <!-- Booking Navigation Tabs -->
+    <ul class="nav nav-pills bg-black p-2 rounded-3 border border-secondary mb-4" id="bookingFilterTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active text-light" id="upcoming-tab" data-bs-toggle="pill" data-bs-target="#upcoming" type="button" role="tab">
+                Upcoming Shows ({{ upcoming_bookings|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-light" id="completed-tab" data-bs-toggle="pill" data-bs-target="#completed" type="button" role="tab">
+                Past Shows ({{ completed_bookings|length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-light" id="cancelled-tab" data-bs-toggle="pill" data-bs-target="#cancelled" type="button" role="tab">
+                Cancelled & Refunded ({{ cancelled_bookings|length }})
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="bookingTabContent">
+        <!-- 1. Upcoming Bookings Tab -->
+        <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+            {% if upcoming_bookings %}
+                <div class="d-flex flex-column gap-4">
+                    {% for b in upcoming_bookings %}
+                        <div class="card bg-dark border-secondary rounded-4 p-4 shadow-sm">
+                            <div class="row g-4 align-items-center">
+                                <div class="col-md-2 text-center text-md-start">
+                                    <div style="width: 100px; height: 140px; background: #1a2233; margin: 0 auto;" class="rounded overflow-hidden">
+                                        {% if b.show.movie.poster %}
+                                            <img src="{{ b.show.movie.poster.url }}" class="w-100 h-100 object-fit-cover" alt="{{ b.show.movie.title }}">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="badge bg-danger">{{ b.show.format }}</span>
+                                        <span class="badge bg-success">CONFIRMED</span>
+                                        <span class="text-secondary small font-monospace">{{ b.booking_id }}</span>
+                                    </div>
+                                    <h4 class="fw-bold text-light mb-1">{{ b.show.movie.title }}</h4>
+                                    <p class="text-secondary small mb-2">
+                                        <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ b.show.screen.cinema.name }} ({{ b.show.screen.name }})
+                                    </p>
+                                    <div class="text-light small">
+                                        <i class="bi bi-calendar-event me-1 text-info"></i> {{ b.show.date|date:"D, d M Y" }} at 
+                                        <strong class="text-warning">{{ b.show.start_time|time:"h:i A" }}</strong>
+                                    </div>
+                                    <div class="mt-2 text-secondary small">
+                                        Seats: <strong class="text-light">{{ b.seat_labels }}</strong> • Paid: <strong class="text-light">₹{{ b.final_amount }}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-md-end d-flex flex-column gap-2">
+                                    <a href="{% url 'bookings:booking_success' b.booking_id %}" class="btn btn-cinema-primary btn-sm">
+                                        <i class="bi bi-qr-code me-1"></i> View QR Ticket
+                                    </a>
+                                    <a href="{% url 'bookings:download_ticket_pdf' b.booking_id %}" class="btn btn-outline-light btn-sm">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
+                                    </a>
+                                    {% if b.can_cancel %}
+                                        <a href="{% url 'bookings:cancel_booking' b.booking_id %}" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-x-circle me-1"></i> Cancel & Refund
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card bg-dark border-secondary rounded-4 p-5 text-center">
+                    <i class="bi bi-ticket-detailed text-secondary fs-1 mb-3"></i>
+                    <h5 class="text-light">No upcoming bookings</h5>
+                    <p class="text-secondary small">Ready for a movie night? Explore now showing blockbusters and reserve seats!</p>
+                    <div><a href="{% url 'movies:movie_list' %}" class="btn btn-cinema-primary">Browse Movies</a></div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. Past Shows Tab -->
+        <div class="tab-pane fade" id="completed" role="tabpanel">
+            {% if completed_bookings %}
+                <div class="d-flex flex-column gap-3">
+                    {% for b in completed_bookings %}
+                        <div class="card bg-dark border-secondary rounded-4 p-3 opacity-75">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="fw-bold text-light mb-1">{{ b.show.movie.title }}</h5>
+                                    <p class="text-secondary small mb-0">{{ b.show.screen.cinema.name }} • {{ b.show.date|date:"d M Y" }} at {{ b.show.start_time|time:"h:i A" }}</p>
+                                    <small class="text-muted">Seats: {{ b.seat_labels }} • Paid: ₹{{ b.final_amount }}</small>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'movies:movie_detail' b.show.movie.slug %}" class="btn btn-cinema-outline btn-sm">
+                                        Rate & Review
+                                    </a>
+                                    <a href="{% url 'bookings:download_ticket_pdf' b.booking_id %}" class="btn btn-dark border-secondary btn-sm">
+                                        PDF
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card bg-dark border-secondary rounded-4 p-4 text-center text-secondary small">
+                    No past show history.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 3. Cancelled Bookings Tab -->
+        <div class="tab-pane fade" id="cancelled" role="tabpanel">
+            {% if cancelled_bookings %}
+                <div class="d-flex flex-column gap-3">
+                    {% for b in cancelled_bookings %}
+                        <div class="card bg-dark border-secondary rounded-4 p-3 border-danger-subtle">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="badge bg-danger mb-1">CANCELLED</div>
+                                    <h5 class="fw-bold text-light mb-1">{{ b.show.movie.title }}</h5>
+                                    <p class="text-secondary small mb-0">{{ b.show.screen.cinema.name }} • Reference: {{ b.booking_id }}</p>
+                                    {% if b.refund %}
+                                        <small class="text-success fw-bold">Refunded: ₹{{ b.refund.refund_amount }} ({{ b.refund.refund_percentage }}% policy applied)</small>
+                                    {% endif %}
+                                </div>
+                                <span class="badge bg-secondary">Cancelled</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card bg-dark border-secondary rounded-4 p-4 text-center text-secondary small">
+                    No cancelled bookings found.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

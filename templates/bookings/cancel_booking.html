@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Reservation – {{ booking.booking_id }} | CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card bg-dark border-secondary rounded-4 shadow-lg p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex p-3 rounded-circle bg-danger text-white mb-2 shadow">
+                        <i class="bi bi-exclamation-triangle-fill fs-3"></i>
+                    </div>
+                    <h3 class="fw-bold text-light mb-1">Confirm Ticket Cancellation</h3>
+                    <p class="text-secondary small">Review the automated cancellation refund policy before proceeding.</p>
+                </div>
+
+                <!-- Booking Meta -->
+                <div class="p-3 bg-black border border-secondary rounded-3 mb-4">
+                    <div class="d-flex justify-content-between text-secondary small mb-1">
+                        <span>Movie:</span>
+                        <strong class="text-light">{{ booking.show.movie.title }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary small mb-1">
+                        <span>Cinema:</span>
+                        <strong class="text-light">{{ booking.show.screen.cinema.name }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary small mb-1">
+                        <span>Showtime:</span>
+                        <strong class="text-light">{{ booking.show.date|date:"d M Y" }} at {{ booking.show.start_time|time:"h:i A" }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary small mb-1">
+                        <span>Seats:</span>
+                        <strong class="text-light">{{ booking.seat_labels }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary small pt-2 border-top border-secondary">
+                        <span>Total Paid:</span>
+                        <strong class="text-light">₹{{ booking.final_amount }}</strong>
+                    </div>
+                </div>
+
+                <!-- Refund Policy Calculation Box -->
+                <div class="card bg-black border border-warning rounded-3 p-3 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-warning fw-bold small"><i class="bi bi-calculator me-1"></i> Policy Refund Calculation</span>
+                        <span class="badge bg-warning text-dark fw-bold">{{ refund_pct }}% Refund</span>
+                    </div>
+                    <p class="text-secondary small mb-2">
+                        {% if refund_pct == 100 %}
+                            Cancellation is initiated more than 24 hours prior to showtime. You are eligible for a <strong>100% full refund</strong>.
+                        {% elif refund_pct == 75 %}
+                            Cancellation is initiated between 2 and 24 hours prior to showtime. You are eligible for a <strong>75% refund</strong>.
+                        {% else %}
+                            Cancellation is initiated less than 2 hours before showtime. No refund can be issued under cinema rules.
+                        {% endif %}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary">
+                        <span class="text-light fw-bold">Calculated Refund:</span>
+                        <span class="fs-4 fw-bold text-success">₹{{ estimated_refund }}</span>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label text-light small fw-bold">Reason for Cancellation</label>
+                        <select name="reason" class="form-select bg-dark text-light border-secondary">
+                            <option value="Change of plans">Change of plans</option>
+                            <option value="Booked wrong date/time">Booked wrong date/time</option>
+                            <option value="Booked by mistake">Booked by mistake</option>
+                            <option value="Emergency">Emergency</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-danger flex-grow-1 py-2">
+                            <i class="bi bi-check-circle me-1"></i> Confirm Cancellation & Process Refund
+                        </button>
+                        <a href="{% url 'bookings:my_bookings' %}" class="btn btn-outline-secondary py-2">
+                            Keep Booking
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

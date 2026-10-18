@@ -1,0 +1,400 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}Admin Dashboard – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+    <!-- Page Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-light mb-1">
+                <i class="bi bi-speedometer2 text-danger me-2"></i>Admin Dashboard
+            </h3>
+            <p class="text-secondary small mb-0">Real-time analytics and platform control center</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'dashboard:manager_dashboard' %}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-building me-1"></i>Manager View
+            </a>
+            <a href="/admin/" class="btn btn-outline-secondary btn-sm" target="_blank">
+                <i class="bi bi-gear me-1"></i>Django Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- ── KPI Metric Cards ── -->
+    <div class="row g-3 mb-4">
+        <!-- Revenue Today -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-dark border-success border-opacity-25 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="text-secondary small mb-1">Revenue Today</div>
+                        <h4 class="text-success fw-bold mb-0">₹{{ revenue_today|floatformat:0|intcomma }}</h4>
+                        <div class="text-secondary" style="font-size: 0.75rem;">This month: ₹{{ revenue_month|floatformat:0|intcomma }}</div>
+                    </div>
+                    <div class="p-2 rounded-3 bg-success bg-opacity-10">
+                        <i class="bi bi-currency-rupee text-success fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
+                    <span class="text-secondary small">Total All-Time:</span>
+                    <span class="text-light fw-bold ms-1">₹{{ total_revenue|floatformat:0|intcomma }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bookings -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-dark border-info border-opacity-25 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="text-secondary small mb-1">Bookings Today</div>
+                        <h4 class="text-info fw-bold mb-0">{{ bookings_today }}</h4>
+                        <div class="text-secondary" style="font-size: 0.75rem;">Total Confirmed: {{ total_bookings }}</div>
+                    </div>
+                    <div class="p-2 rounded-3 bg-info bg-opacity-10">
+                        <i class="bi bi-ticket-perforated text-info fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
+                    <span class="text-secondary small">Movies Now Showing:</span>
+                    <span class="text-light fw-bold ms-1">{{ now_showing }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-dark border-warning border-opacity-25 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="text-secondary small mb-1">Registered Users</div>
+                        <h4 class="text-warning fw-bold mb-0">{{ total_users }}</h4>
+                        <div class="text-secondary" style="font-size: 0.75rem;">New This Month: +{{ new_users_month }}</div>
+                    </div>
+                    <div class="p-2 rounded-3 bg-warning bg-opacity-10">
+                        <i class="bi bi-people text-warning fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
+                    <span class="badge bg-warning text-dark me-1">{{ customers }} Customers</span>
+                    <span class="badge bg-secondary">{{ managers }} Managers</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cinemas & Rating -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card bg-dark border-danger border-opacity-25 rounded-4 p-3 h-100">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div class="text-secondary small mb-1">Avg. Movie Rating</div>
+                        <h4 class="text-danger fw-bold mb-0">
+                            <i class="bi bi-star-fill text-warning me-1" style="font-size: 1rem;"></i>{{ avg_rating }}/10
+                        </h4>
+                        <div class="text-secondary" style="font-size: 0.75rem;">{{ total_reviews }} verified reviews</div>
+                    </div>
+                    <div class="p-2 rounded-3 bg-danger bg-opacity-10">
+                        <i class="bi bi-building text-danger fs-4"></i>
+                    </div>
+                </div>
+                <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
+                    <span class="text-secondary small">Active Cinemas:</span>
+                    <span class="text-light fw-bold ms-1">{{ total_cinemas }} • Occupancy {{ occupancy_rate }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Charts Row ── -->
+    <div class="row g-3 mb-4">
+        <!-- Revenue Line Chart -->
+        <div class="col-xl-8">
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 h-100">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-graph-up-arrow text-success me-2"></i>Revenue (Last 14 Days)
+                </h6>
+                <div style="height: 260px;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- Genre Doughnut -->
+        <div class="col-xl-4">
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 h-100">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-pie-chart text-info me-2"></i>Movies by Genre
+                </h6>
+                <div style="height: 260px;">
+                    <canvas id="genreChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Second Charts Row ── -->
+    <div class="row g-3 mb-4">
+        <!-- Bookings Bar Chart -->
+        <div class="col-xl-8">
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 h-100">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-bar-chart text-info me-2"></i>Daily Bookings (Last 14 Days)
+                </h6>
+                <div style="height: 240px;">
+                    <canvas id="bookingsChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- User Roles Doughnut -->
+        <div class="col-xl-4">
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 h-100">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-people-fill text-warning me-2"></i>User Distribution
+                </h6>
+                <div style="height: 200px;">
+                    <canvas id="userRolesChart"></canvas>
+                </div>
+                <div class="mt-3 d-flex justify-content-around text-center">
+                    <div><div class="fw-bold text-primary">{{ customers }}</div><div class="text-secondary small">Customers</div></div>
+                    <div><div class="fw-bold text-warning">{{ managers }}</div><div class="text-secondary small">Managers</div></div>
+                    <div><div class="fw-bold text-danger">{{ admins }}</div><div class="text-secondary small">Admins</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Bottom Data Tables Row ── -->
+    <div class="row g-3 mb-4">
+        <!-- Top Movies by Bookings -->
+        <div class="col-xl-7">
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 h-100">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-trophy text-warning me-2"></i>Top Movies by Bookings
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm table-hover mb-0 align-middle">
+                        <thead>
+                            <tr class="text-secondary small border-secondary">
+                                <th>#</th>
+                                <th>Movie</th>
+                                <th>Language</th>
+                                <th>Rating</th>
+                                <th>Bookings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movie in top_movies %}
+                            <tr>
+                                <td class="text-secondary">{{ forloop.counter }}</td>
+                                <td>
+                                    <a href="{% url 'movies:movie_detail' movie.slug %}" class="text-light fw-semibold text-decoration-none">
+                                        {{ movie.title }}
+                                    </a>
+                                </td>
+                                <td><span class="badge bg-secondary">{{ movie.language }}</span></td>
+                                <td><i class="bi bi-star-fill text-warning me-1" style="font-size: 0.75rem;"></i>{{ movie.rating }}</td>
+                                <td>
+                                    <span class="badge bg-success bg-opacity-25 text-success">{{ movie.total_bookings }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-secondary py-3">No booking data yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chatbot Intents + Recent Refunds -->
+        <div class="col-xl-5">
+            <!-- Chatbot Intent Analytics -->
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 mb-3">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-chat-dots text-info me-2"></i>Chatbot Intent Analytics
+                </h6>
+                {% for item in chatbot_intents %}
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-secondary small text-capitalize">{{ item.label|default:item.intent }}</span>
+                        <span class="text-light small fw-bold">{{ item.total }}</span>
+                    </div>
+                    <div class="progress" style="height: 6px; background: #1a1a2e;">
+                        <div class="progress-bar bg-info" style="width: {% widthratio item.total chatbot_intents.0.total 100 %}%;"></div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-secondary small mb-0">No chatbot interactions yet.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Recent Refunds -->
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-arrow-return-left text-danger me-2"></i>Recent Refunds
+                </h6>
+                {% for refund in recent_refunds %}
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary border-opacity-25">
+                    <div>
+                        <div class="text-light small fw-semibold">{{ refund.booking.user.username }}</div>
+                        <div class="text-secondary" style="font-size: 0.72rem;">{{ refund.booking.show.movie.title }} • {{ refund.created_at|date:"d M Y" }}</div>
+                    </div>
+                    <span class="text-danger fw-bold small">₹{{ refund.refund_amount|floatformat:0 }}</span>
+                </div>
+                {% empty %}
+                <p class="text-secondary small mb-0">No refunds processed yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Recent Bookings Table ── -->
+    <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4">
+        <h6 class="fw-bold text-light mb-3">
+            <i class="bi bi-clock-history text-secondary me-2"></i>Recent Confirmed Bookings
+        </h6>
+        <div class="table-responsive">
+            <table class="table table-dark table-sm table-hover mb-0 align-middle">
+                <thead>
+                    <tr class="text-secondary small border-secondary">
+                        <th>Booking ID</th>
+                        <th>Customer</th>
+                        <th>Movie</th>
+                        <th>Cinema</th>
+                        <th>Seats</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in recent_bookings %}
+                    <tr>
+                        <td><code class="text-warning small">{{ booking.booking_id }}</code></td>
+                        <td><span class="text-light small">{{ booking.user.get_full_name|default:booking.user.username }}</span></td>
+                        <td><span class="text-light small">{{ booking.show.movie.title }}</span></td>
+                        <td><span class="text-secondary small">{{ booking.show.screen.cinema.name }}</span></td>
+                        <td><span class="badge bg-dark border-secondary">{{ booking.total_seats }}</span></td>
+                        <td><span class="text-success fw-semibold small">₹{{ booking.final_amount|floatformat:0 }}</span></td>
+                        <td><span class="text-secondary small">{{ booking.booked_at|date:"d M, H:i" }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="7" class="text-center text-secondary py-3">No bookings yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const CHART_DEFAULTS = {
+    color: '#94a3b8',
+    borderColor: 'rgba(148,163,184,0.15)',
+    font: { family: "'Inter', sans-serif", size: 11 }
+};
+Chart.defaults.color = CHART_DEFAULTS.color;
+Chart.defaults.borderColor = CHART_DEFAULTS.borderColor;
+Chart.defaults.font = CHART_DEFAULTS.font;
+
+// Revenue Line Chart
+new Chart(document.getElementById('revenueChart'), {
+    type: 'line',
+    data: {
+        labels: {{ revenue_days_json|safe }},
+        datasets: [{
+            label: 'Revenue (₹)',
+            data: {{ revenue_vals_json|safe }},
+            borderColor: '#22c55e',
+            backgroundColor: 'rgba(34,197,94,0.08)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: '#22c55e',
+            pointRadius: 3,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: {
+                grid: { color: 'rgba(255,255,255,0.05)' },
+                ticks: { callback: v => '₹' + v.toLocaleString() }
+            }
+        }
+    }
+});
+
+// Bookings Bar Chart
+new Chart(document.getElementById('bookingsChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ bookings_days_json|safe }},
+        datasets: [{
+            label: 'Bookings',
+            data: {{ bookings_vals_json|safe }},
+            backgroundColor: 'rgba(6,182,212,0.7)',
+            borderColor: '#06b6d4',
+            borderWidth: 1,
+            borderRadius: 5,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1 } }
+        }
+    }
+});
+
+// Genre Doughnut
+new Chart(document.getElementById('genreChart'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ genre_labels_json|safe }},
+        datasets: [{
+            data: {{ genre_counts_json|safe }},
+            backgroundColor: [
+                '#ef4444','#f97316','#eab308','#22c55e','#06b6d4',
+                '#8b5cf6','#ec4899','#10b981','#f59e0b','#3b82f6'
+            ],
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, font: {size: 10} } } }
+    }
+});
+
+// User Roles Doughnut
+new Chart(document.getElementById('userRolesChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Customers', 'Managers', 'Admins'],
+        datasets: [{
+            data: {{ user_roles_json|safe }},
+            backgroundColor: ['#3b82f6','#eab308','#ef4444'],
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '60%',
+        plugins: { legend: { display: false } }
+    }
+});
+</script>
+{% endblock %}

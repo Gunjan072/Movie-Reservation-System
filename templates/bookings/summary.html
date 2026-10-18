@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Booking Summary – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <!-- Active Seat Lock Countdown Banner -->
+            <div class="card bg-danger bg-opacity-10 border border-danger rounded-4 p-3 mb-4 text-center">
+                <div class="d-flex justify-content-center align-items-center gap-2">
+                    <i class="bi bi-clock-history text-danger fs-4"></i>
+                    <span class="text-light fw-bold">Seats Temporarily Reserved:</span>
+                    <span id="countdownTimer" class="badge bg-danger fs-5 font-monospace">05:00</span>
+                </div>
+                <small class="text-secondary mt-1">Complete your transaction before the timer expires to secure your seats against double-booking.</small>
+            </div>
+
+            <div class="card bg-dark border-secondary rounded-4 shadow-lg overflow-hidden">
+                <div class="card-header bg-gradient p-4 border-secondary" style="background-color: #161F30;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="fw-bold text-light mb-0"><i class="bi bi-receipt text-danger me-2"></i> Review Booking Details</h4>
+                        <span class="badge bg-secondary">{{ show.format }} • {{ show.language }}</span>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <!-- Movie & Venue Card -->
+                    <div class="d-flex gap-4 align-items-center pb-4 mb-4 border-bottom border-secondary">
+                        <div style="width: 80px; height: 110px; background: #1a2233; flex-shrink: 0;" class="rounded overflow-hidden">
+                            {% if show.movie.poster %}
+                                <img src="{{ show.movie.poster.url }}" class="w-100 h-100 object-fit-cover" alt="{{ show.movie.title }}">
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3 class="fw-bold text-light mb-1">{{ show.movie.title }}</h3>
+                            <div class="text-secondary small mb-1">
+                                <i class="bi bi-building me-1 text-danger"></i> {{ show.screen.cinema.name }} | 
+                                <strong>{{ show.screen.name }}</strong>
+                            </div>
+                            <div class="text-secondary small">
+                                <i class="bi bi-calendar-event me-1 text-info"></i> {{ show.date|date:"D, d M Y" }} at 
+                                <strong class="text-warning">{{ show.start_time|time:"h:i A" }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Seats -->
+                    <div class="mb-4">
+                        <div class="text-secondary small fw-bold mb-2">Reserved Seats:</div>
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for ss in show_seats %}
+                                <span class="badge bg-black border border-secondary text-light p-2 fs-6">
+                                    {{ ss.seat.label }} <small class="text-secondary">({{ ss.seat.get_seat_type_display }} - ₹{{ ss.price|floatformat:0 }})</small>
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Coupon Code Section -->
+                    <div class="card bg-black border-secondary rounded-3 p-3 mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="text-light small fw-bold"><i class="bi bi-tag-fill text-warning me-1"></i> Promotional Coupon</span>
+                            {% if applied_coupon %}
+                                <a href="{% url 'bookings:remove_coupon' %}" class="text-danger small text-decoration-none">Remove Coupon</a>
+                            {% endif %}
+                        </div>
+
+                        {% if applied_coupon %}
+                            <div class="alert alert-success py-2 small mb-0 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-check-circle-fill me-1"></i> Coupon <strong>{{ applied_coupon.code }}</strong> applied! 
+                                    (Saved ₹{{ discount_amount }})
+                                </div>
+                            </div>
+                        {% else %}
+                            <form action="{% url 'bookings:apply_coupon' %}" method="POST" class="d-flex gap-2">
+                                {% csrf_token %}
+                                <input type="text" name="coupon_code" class="form-control form-control-sm bg-dark text-light border-secondary text-uppercase" placeholder="Enter coupon (e.g. WELCOME100, MOVIE50)" required>
+                                <button type="submit" class="btn btn-warning btn-sm px-3 fw-bold">Apply</button>
+                            </form>
+                            <small class="text-secondary d-block mt-1">Try codes: <strong class="text-warning">WELCOME100</strong> (₹100 off), <strong class="text-warning">MOVIE50</strong> (₹50 off)</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Itemized Price Breakdown -->
+                    <div class="card bg-black border-secondary rounded-3 p-3 mb-4">
+                        <div class="d-flex justify-content-between text-secondary small mb-2">
+                            <span>Ticket Subtotal ({{ show_seats.count }} Seats):</span>
+                            <span class="text-light">₹{{ ticket_total }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-secondary small mb-2">
+                            <span>Convenience Fee:</span>
+                            <span class="text-light">₹{{ convenience_fee }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-secondary small mb-2">
+                            <span>Integrated GST (18%):</span>
+                            <span class="text-light">₹{{ taxes }}</span>
+                        </div>
+                        {% if discount_amount > 0 %}
+                            <div class="d-flex justify-content-between text-success small mb-2 fw-bold">
+                                <span>Promotional Discount:</span>
+                                <span>-₹{{ discount_amount }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary">
+                            <span class="fs-5 fw-bold text-light">Final Payable Amount:</span>
+                            <span class="fs-4 fw-bold text-danger">₹{{ final_total }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Controls -->
+                    <div class="d-flex flex-column flex-md-row gap-3">
+                        <a href="{% url 'bookings:payment' %}" class="btn btn-cinema-primary btn-lg flex-grow-1">
+                            <i class="bi bi-credit-card me-2"></i> Proceed to Payment
+                        </a>
+                        <a href="{% url 'bookings:release_seats' %}" class="btn btn-cinema-outline btn-lg" onclick="return confirm('Are you sure you want to release these reserved seats?');">
+                            <i class="bi bi-x-circle me-1"></i> Release & Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 5-Minute Countdown Timer Synchronization
+    let secondsLeft = {{ seconds_remaining }};
+    const timerDisplay = document.getElementById('countdownTimer');
+
+    function updateTimer() {
+        if (secondsLeft <= 0) {
+            timerDisplay.textContent = "00:00";
+            alert("Your 5-minute seat reservation has expired. Returning to seat selection.");
+            window.location.href = "{% url 'shows:seat_layout' show.id %}";
+            return;
+        }
+
+        const mins = Math.floor(secondsLeft / 60);
+        const secs = secondsLeft % 60;
+        timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        secondsLeft--;
+    }
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+</script>
+{% endblock %}

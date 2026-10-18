@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}CineReserve – Book Your Ultimate Cinema Experience{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+    <!-- 1. Hero Movie Banner & Experience Callout -->
+    <div class="hero-section mb-5 position-relative overflow-hidden rounded-4" style="min-height: 480px; background: #161F30;">
+        {% if featured_movies %}
+            {% with hero=featured_movies.0 %}
+                <div class="position-absolute w-100 h-100" style="background: radial-gradient(circle at right center, rgba(229, 9, 20, 0.25) 0%, rgba(11, 15, 25, 0.95) 70%), url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat; filter: brightness(0.65);"></div>
+                <div class="hero-gradient-overlay"></div>
+                
+                <div class="hero-content p-4 p-md-5">
+                    <span class="badge bg-danger text-uppercase px-3 py-2 mb-3 fw-bold tracking-wider">
+                        <i class="bi bi-fire me-1"></i> Spotlight Blockbuster
+                    </span>
+                    <h1 class="display-4 fw-extrabold text-white text-shadow mb-2">Book Your Movie Experience</h1>
+                    <h2 class="h3 fw-bold text-white mb-2">{{ hero.title }}</h2>
+                    <div class="d-flex flex-wrap align-items-center gap-3 text-secondary small mb-3">
+                        <span class="text-warning fw-bold fs-5"><i class="bi bi-star-fill me-1"></i> {{ hero.rating }}/10</span>
+                        <span>•</span>
+                        <span><i class="bi bi-clock me-1"></i> {{ hero.formatted_duration }}</span>
+                        <span>•</span>
+                        <span class="badge border border-secondary text-light">{{ hero.get_certification_display }}</span>
+                        <span>•</span>
+                        <span class="text-light">{{ hero.language }}</span>
+                    </div>
+                    <p class="text-light opacity-75 mb-4 d-none d-md-block fs-6" style="max-width: 550px;">
+                        {{ hero.synopsis|truncatewords:28 }}
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="{% url 'movies:movie_detail' hero.slug %}" class="btn btn-cinema-primary btn-lg px-4">
+                            <i class="bi bi-ticket-perforated-fill me-2"></i> Book Tickets
+                        </a>
+                        {% if hero.trailer_url %}
+                            <a href="{{ hero.trailer_url }}" target="_blank" class="btn btn-outline-light btn-lg px-4">
+                                <i class="bi bi-play-circle me-2"></i> Watch Trailer
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endwith %}
+        {% endif %}
+    </div>
+
+    <!-- Quick Search / Booking Filter Bar -->
+    <div class="card bg-dark border-secondary rounded-4 shadow-lg p-3 mb-5 mt-n4 position-relative z-3">
+        <form action="{% url 'movies:movie_list' %}" method="GET" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-black border-secondary text-secondary"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control bg-black text-light border-secondary" placeholder="Search by title, genre, actor, or director...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select bg-black text-light border-secondary">
+                    <option value="">All Movies</option>
+                    <option value="NOW_SHOWING" selected>Now Showing</option>
+                    <option value="COMING_SOON">Coming Soon</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="certification" class="form-select bg-black text-light border-secondary">
+                    <option value="">All Age Ratings</option>
+                    <option value="U">U (Universal)</option>
+                    <option value="UA">UA (Parental)</option>
+                    <option value="A">A (Adults Only)</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-cinema-primary w-100">
+                    <i class="bi bi-filter me-1"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 2. AI Recommended For You (BCA AIML Highlight) -->
+    {% if recommended_movies %}
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <span class="badge bg-warning text-dark text-uppercase px-2 py-1 mb-1 fw-bold">
+                    <i class="bi bi-cpu-fill me-1"></i> Machine Learning Engine
+                </span>
+                <h3 class="fw-bold text-light mb-0">Recommended For You</h3>
+            </div>
+            <a href="{% url 'recommendations:recommended' %}" class="btn btn-sm btn-outline-warning">
+                View AI Analytics <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for movie in recommended_movies %}
+                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
+                    <div class="card movie-card h-100">
+                        <div class="movie-poster-wrapper">
+                            {% if movie.poster %}
+                                <img src="{{ movie.poster.url }}" class="movie-poster-img" alt="{{ movie.title }}">
+                            {% else %}
+                                <div class="position-absolute w-100 h-100 d-flex flex-column align-items-center justify-content-center text-secondary p-3 text-center" style="background: #1e293b;">
+                                    <i class="bi bi-film fs-1 text-danger mb-2"></i>
+                                    <h6 class="text-light mb-0">{{ movie.title }}</h6>
+                                </div>
+                            {% endif %}
+                            <div class="rating-badge">
+                                <i class="bi bi-star-fill text-warning me-1"></i>{{ movie.rating }}
+                            </div>
+                            <div class="cert-badge">{{ movie.certification }}</div>
+                        </div>
+                        <div class="card-body p-3 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="card-title fw-bold text-light text-truncate mb-1" title="{{ movie.title }}">
+                                    {{ movie.title }}
+                                </h6>
+                                <div class="text-secondary small mb-2">
+                                    {{ movie.language }} • {{ movie.formatted_duration }}
+                                </div>
+                                <div class="d-flex flex-wrap gap-1 mb-3">
+                                    {% for g in movie.genres.all|slice:":2" %}
+                                        <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.7rem;">{{ g.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <a href="{% url 'movies:movie_detail' movie.slug %}" class="btn btn-cinema-primary btn-sm w-100">
+                                Book Tickets
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- 3. Now Showing Section -->
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-light mb-0">Now Showing in Theaters</h3>
+                <small class="text-secondary">Select a movie to pick cinemas, dates, and interactive seats</small>
+            </div>
+            <a href="{% url 'movies:movie_list' %}?status=NOW_SHOWING" class="btn btn-sm btn-cinema-outline">
+                See All Movies <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for movie in now_showing %}
+                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
+                    <div class="card movie-card h-100">
+                        <div class="movie-poster-wrapper">
+                            {% if movie.poster %}
+                                <img src="{{ movie.poster.url }}" class="movie-poster-img" alt="{{ movie.title }}">
+                            {% else %}
+                                <div class="position-absolute w-100 h-100 d-flex flex-column align-items-center justify-content-center text-secondary p-3 text-center" style="background: #1e293b;">
+                                    <i class="bi bi-film fs-1 text-danger mb-2"></i>
+                                    <h6 class="text-light mb-0">{{ movie.title }}</h6>
+                                </div>
+                            {% endif %}
+                            <div class="rating-badge">
+                                <i class="bi bi-star-fill text-warning me-1"></i>{{ movie.rating }}
+                            </div>
+                            <div class="cert-badge">{{ movie.certification }}</div>
+                        </div>
+                        <div class="card-body p-3 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="card-title fw-bold text-light text-truncate mb-1" title="{{ movie.title }}">
+                                    {{ movie.title }}
+                                </h6>
+                                <div class="text-secondary small mb-2">
+                                    {{ movie.language }} • {{ movie.formatted_duration }}
+                                </div>
+                                <div class="d-flex flex-wrap gap-1 mb-3">
+                                    {% for g in movie.genres.all|slice:":2" %}
+                                        <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.7rem;">{{ g.name }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <a href="{% url 'movies:movie_detail' movie.slug %}" class="btn btn-cinema-primary btn-sm w-100">
+                                <i class="bi bi-ticket-perforated me-1"></i> Book Tickets
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- 4. Featured Cinemas Section -->
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-light mb-0">Featured Cinemas & Multiplexes</h3>
+                <small class="text-secondary">Equipped with IMAX Laser, Dolby Atmos, and Luxury Recliners</small>
+            </div>
+            <a href="{% url 'cinemas:cinema_list' %}" class="btn btn-sm btn-cinema-outline">
+                All Cinemas <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for cinema in cinemas %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="card bg-dark border-secondary rounded-4 h-100 p-4 shadow-sm hover-shadow">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold text-light mb-0">{{ cinema.name }}</h5>
+                            <span class="badge bg-danger"><i class="bi bi-geo-alt-fill me-1"></i>{{ cinema.city }}</span>
+                        </div>
+                        <p class="text-secondary small mb-3">{{ cinema.address }}</p>
+                        
+                        <div class="mb-3">
+                            <div class="text-secondary small fw-bold mb-2">Available Screens:</div>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for screen in cinema.screens.all %}
+                                    <span class="badge bg-black border border-secondary text-light">{{ screen.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="text-secondary small fw-bold mb-2">Facilities & Tech:</div>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for fac in cinema.facilities_list %}
+                                    <span class="badge bg-secondary text-light small"><i class="bi bi-check2 me-1"></i>{{ fac }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mt-auto">
+                            <a href="{% url 'cinemas:cinema_detail' cinema.slug %}" class="btn btn-cinema-outline w-100 btn-sm">
+                                View Shows & Screen Schedules
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- 5. Promotional Coupons & Offers -->
+    <section class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-light mb-0">Exclusive Coupons & Offers</h3>
+                <small class="text-secondary">Apply promotional codes during checkout to enjoy discounts</small>
+            </div>
+            <a href="{% url 'bookings:offers' %}" class="btn btn-sm btn-cinema-outline">
+                All Offers <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+
+        <div class="row g-3">
+            {% for coupon in coupons %}
+                <div class="col-lg-3 col-md-6">
+                    <div class="coupon-card h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-warning text-dark fw-bold">PROMO</span>
+                                <small class="text-secondary">Exp: {{ coupon.valid_until|date:"M d" }}</small>
+                            </div>
+                            <h4 class="fw-bold text-light mb-1">
+                                {% if coupon.discount_type == 'PERCENTAGE' %}
+                                    {{ coupon.discount_value|floatformat:0 }}% OFF
+                                {% else %}
+                                    ₹{{ coupon.discount_value|floatformat:0 }} FLAT OFF
+                                {% endif %}
+                            </h4>
+                            <p class="text-secondary small mb-3">Min. booking of ₹{{ coupon.min_amount|floatformat:0 }}</p>
+                        </div>
+                        <div class="p-2 rounded bg-black border border-secondary text-center">
+                            <span class="font-monospace text-warning fw-bold fs-6">{{ coupon.code }}</span>
+                            <small class="d-block text-secondary" style="font-size: 0.75rem;">Use code at payment</small>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- 6. Coming Soon Teasers -->
+    {% if coming_soon %}
+    <section class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-light mb-0">Coming Soon to Theaters</h3>
+                <small class="text-secondary">Stay tuned for advance bookings and premieres</small>
+            </div>
+            <a href="{% url 'movies:movie_list' %}?status=COMING_SOON" class="btn btn-sm btn-cinema-outline">
+                View All Upcoming
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {% for movie in coming_soon %}
+                <div class="col-xl-3 col-lg-3 col-md-4 col-sm-6">
+                    <div class="card movie-card h-100">
+                        <div class="movie-poster-wrapper">
+                            {% if movie.poster %}
+                                <img src="{{ movie.poster.url }}" class="movie-poster-img" alt="{{ movie.title }}">
+                            {% else %}
+                                <div class="position-absolute w-100 h-100 d-flex flex-column align-items-center justify-content-center text-secondary p-3 text-center" style="background: #1e293b;">
+                                    <i class="bi bi-film fs-1 text-danger mb-2"></i>
+                                    <h6 class="text-light mb-0">{{ movie.title }}</h6>
+                                </div>
+                            {% endif %}
+                            <div class="cert-badge">Releases {{ movie.release_date|date:"d M" }}</div>
+                        </div>
+                        <div class="card-body p-3 d-flex flex-column justify-content-between">
+                            <div>
+                                <h6 class="card-title fw-bold text-light text-truncate mb-1" title="{{ movie.title }}">
+                                    {{ movie.title }}
+                                </h6>
+                                <div class="text-secondary small mb-2">
+                                    {{ movie.language }} • {{ movie.formatted_duration }}
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'movies:movie_detail' movie.slug %}" class="btn btn-cinema-outline btn-sm w-100">
+                                    Details
+                                </a>
+                                {% if movie.trailer_url %}
+                                    <a href="{{ movie.trailer_url }}" target="_blank" class="btn btn-danger btn-sm" title="Watch Trailer">
+                                        <i class="bi bi-play-fill"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}

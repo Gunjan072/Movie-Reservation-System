@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block title %}Manager Dashboard – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+    <!-- Page Header -->
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h3 class="fw-bold text-light mb-1">
+                <i class="bi bi-building text-warning me-2"></i>Cinema Manager Dashboard
+            </h3>
+            <p class="text-secondary small mb-0">Operations, occupancy, and revenue analytics for today</p>
+        </div>
+        <div class="d-flex gap-2">
+            {% if user.is_admin_user %}
+            <a href="{% url 'dashboard:admin_dashboard' %}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-speedometer2 me-1"></i>Admin Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ── Summary Cards ── -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-dark border-warning border-opacity-25 rounded-4 p-3 text-center">
+                <div class="text-warning fs-3 fw-bold">{{ total_shows_today }}</div>
+                <div class="text-secondary small">Shows Today</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-info border-opacity-25 rounded-4 p-3 text-center">
+                <div class="text-info fs-3 fw-bold">{{ avg_occupancy }}%</div>
+                <div class="text-secondary small">Avg. Occupancy</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-success border-opacity-25 rounded-4 p-3 text-center">
+                <div class="text-success fs-3 fw-bold">{{ high_fill_shows|length }}</div>
+                <div class="text-secondary small">High-Fill Shows (≥80%)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-danger border-opacity-25 rounded-4 p-3 text-center">
+                <div class="text-danger fs-3 fw-bold">{{ low_fill_shows|length }}</div>
+                <div class="text-secondary small">Low-Fill Shows (&lt;30%)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Revenue Chart + Cinema Revenue ── -->
+    <div class="row g-3 mb-4">
+        <div class="col-xl-7">
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 h-100">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-graph-up text-success me-2"></i>Revenue – Last 7 Days
+                </h6>
+                <div style="height: 240px;">
+                    <canvas id="revChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-5">
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 h-100">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-building me-2 text-warning"></i>Cinema Revenue (This Month)
+                </h6>
+                {% for item in cinema_revenue %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-light small fw-semibold">{{ item.cinema.name }}</span>
+                        <span class="text-success small fw-bold">₹{{ item.revenue|floatformat:0|intcomma }}</span>
+                    </div>
+                    <div class="progress mb-1" style="height: 6px; background: #1a1a2e;">
+                        {% with max_rev=cinema_revenue.0.revenue %}
+                        <div class="progress-bar bg-warning"
+                             style="width: {% if max_rev > 0 %}{% widthratio item.revenue max_rev 100 %}{% else %}0{% endif %}%;"></div>
+                        {% endwith %}
+                    </div>
+                    <div class="text-secondary" style="font-size: 0.72rem;">{{ item.bookings }} bookings this month</div>
+                </div>
+                {% empty %}
+                <p class="text-secondary small">No revenue data available.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Today's Shows Occupancy Table ── -->
+    <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 mb-4">
+        <h6 class="fw-bold text-light mb-3">
+            <i class="bi bi-calendar-event text-info me-2"></i>Today's Shows — Live Occupancy
+        </h6>
+        <div class="table-responsive">
+            <table class="table table-dark table-sm table-hover mb-0 align-middle">
+                <thead>
+                    <tr class="text-secondary small border-secondary">
+                        <th>Time</th>
+                        <th>Movie</th>
+                        <th>Screen</th>
+                        <th>Cinema</th>
+                        <th>Seats</th>
+                        <th>Booked</th>
+                        <th>Locked</th>
+                        <th>Occupancy</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in shows_with_stats %}
+                    <tr>
+                        <td class="text-light fw-bold" style="white-space: nowrap;">
+                            {{ item.show.start_time|date:"h:i A" }}
+                        </td>
+                        <td>
+                            <a href="{% url 'movies:movie_detail' item.show.movie.slug %}" class="text-light text-decoration-none small fw-semibold">
+                                {{ item.show.movie.title }}
+                            </a>
+                        </td>
+                        <td><span class="badge bg-dark border-secondary text-secondary small">{{ item.show.screen.screen_name }}</span></td>
+                        <td><span class="text-secondary small">{{ item.show.screen.cinema.name }}</span></td>
+                        <td class="text-light small">{{ item.total }}</td>
+                        <td class="text-success small fw-bold">{{ item.booked }}</td>
+                        <td class="text-warning small">{{ item.locked }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="height: 6px; min-width: 60px; background: #1a1a2e;">
+                                    <div class="progress-bar {% if item.occupancy >= 80 %}bg-success{% elif item.occupancy >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                         style="width: {{ item.occupancy }}%;"></div>
+                                </div>
+                                <span class="small {% if item.occupancy >= 80 %}text-success{% elif item.occupancy >= 50 %}text-warning{% else %}text-danger{% endif %} fw-bold">
+                                    {{ item.occupancy }}%
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if item.occupancy >= 90 %}
+                                <span class="badge bg-danger">Sold Out Soon</span>
+                            {% elif item.occupancy >= 50 %}
+                                <span class="badge bg-success bg-opacity-25 text-success">Filling Fast</span>
+                            {% else %}
+                                <span class="badge bg-dark border-secondary text-secondary">Available</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="9" class="text-center text-secondary py-4">No shows scheduled for today.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ── Movie Performance + Recent Bookings ── -->
+    <div class="row g-3">
+        <!-- Movie Performance -->
+        <div class="col-xl-5">
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 h-100">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-film text-danger me-2"></i>Movie Booking Performance
+                </h6>
+                {% for movie in movie_stats %}
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="flex-shrink-0">
+                        {% if movie.poster %}
+                        <img src="{{ movie.poster.url }}" class="rounded" style="width:36px; height:48px; object-fit:cover;" alt="">
+                        {% else %}
+                        <div class="rounded d-flex align-items-center justify-content-center bg-dark border-secondary border" style="width:36px;height:48px;">
+                            <i class="bi bi-film text-secondary small"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="text-light small fw-semibold text-truncate">{{ movie.title }}</div>
+                        <div class="progress mt-1" style="height: 5px; background: #1a1a2e;">
+                            <div class="progress-bar bg-danger"
+                                 style="width: {% if movie_stats.0.booking_count > 0 %}{% widthratio movie.booking_count movie_stats.0.booking_count 100 %}{% else %}0{% endif %}%;"></div>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0 text-end">
+                        <div class="text-warning small fw-bold">{{ movie.booking_count }}</div>
+                        <div class="text-secondary" style="font-size: 0.7rem;">bookings</div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-secondary small">No booking data yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Bookings -->
+        <div class="col-xl-7">
+            <div class="card bg-dark border-secondary border-opacity-25 rounded-4 p-4 h-100">
+                <h6 class="fw-bold text-light mb-3">
+                    <i class="bi bi-clock-history text-secondary me-2"></i>Recent Bookings
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm table-hover mb-0 align-middle">
+                        <thead>
+                            <tr class="text-secondary small border-secondary">
+                                <th>ID</th>
+                                <th>Customer</th>
+                                <th>Movie</th>
+                                <th>Seats</th>
+                                <th>Amount</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in recent_bookings %}
+                            <tr>
+                                <td><code class="text-warning" style="font-size: 0.7rem;">{{ b.booking_id|slice:":12" }}…</code></td>
+                                <td><span class="text-light small">{{ b.user.get_full_name|default:b.user.username }}</span></td>
+                                <td><span class="text-light small">{{ b.show.movie.title|truncatechars:18 }}</span></td>
+                                <td><span class="badge bg-dark border-secondary">{{ b.total_seats }}</span></td>
+                                <td><span class="text-success fw-semibold small">₹{{ b.final_amount|floatformat:0 }}</span></td>
+                                <td><span class="text-secondary small">{{ b.booked_at|date:"H:i" }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center text-secondary py-3">No recent bookings.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = 'rgba(148,163,184,0.12)';
+Chart.defaults.font = { family: "'Inter', sans-serif", size: 11 };
+
+new Chart(document.getElementById('revChart'), {
+    type: 'bar',
+    data: {
+        labels: {{ rev_labels_json|safe }},
+        datasets: [{
+            label: 'Revenue (₹)',
+            data: {{ rev_values_json|safe }},
+            backgroundColor: 'rgba(234,179,8,0.7)',
+            borderColor: '#eab308',
+            borderWidth: 1,
+            borderRadius: 5,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' } },
+            y: { grid: { color: 'rgba(255,255,255,0.05)' },
+                 ticks: { callback: v => '₹' + v.toLocaleString() } }
+        }
+    }
+});
+</script>
+{% endblock %}

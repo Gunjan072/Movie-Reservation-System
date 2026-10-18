@@ -1,0 +1,377 @@
+/* =========================================================
+   CineReserve – Smart Movie Reservation & Cinema Management
+   Global Cinema Dark-Theme Stylesheet
+   ========================================================= */
+
+:root {
+    --cr-bg-main: #0B0F19;
+    --cr-bg-surface: #111827;
+    --cr-bg-card: #1F2937;
+    --cr-bg-card-hover: #263346;
+    --cr-primary: #E50914;
+    --cr-primary-hover: #B80710;
+    --cr-accent-gold: #F5C518;
+    --cr-text-primary: #F9FAFB;
+    --cr-text-muted: #9CA3AF;
+    --cr-border: #374151;
+    --cr-seat-available: #374151;
+    --cr-seat-selected: #10B981;
+    --cr-seat-locked: #F59E0B;
+    --cr-seat-booked: #EF4444;
+}
+
+body {
+    background-color: var(--cr-bg-main);
+    color: var(--cr-text-primary);
+    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+/* Glassmorphism Navigation */
+.navbar-cinema {
+    background: rgba(17, 24, 39, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.3s ease;
+}
+
+.brand-logo {
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
+    color: #ffffff !important;
+}
+
+.brand-logo span {
+    color: var(--cr-primary);
+}
+
+.nav-link {
+    color: #D1D5DB !important;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: var(--cr-primary) !important;
+}
+
+/* Hero Carousel */
+.hero-section {
+    position: relative;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+.hero-gradient-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(11, 15, 25, 0.1) 0%, rgba(11, 15, 25, 0.85) 75%, rgba(11, 15, 25, 1) 100%);
+    pointer-events: none;
+}
+
+.hero-content {
+    position: absolute;
+    bottom: 40px;
+    left: 40px;
+    max-width: 650px;
+    z-index: 2;
+}
+
+/* Movie Cards */
+.movie-card {
+    background-color: var(--cr-bg-card);
+    border: 1px solid var(--cr-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
+}
+
+.movie-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 32px rgba(229, 9, 20, 0.18);
+    border-color: rgba(229, 9, 20, 0.5);
+}
+
+.movie-poster-wrapper {
+    position: relative;
+    padding-top: 145%;
+    background-color: #1a2233;
+    overflow: hidden;
+}
+
+.movie-poster-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.movie-card:hover .movie-poster-img {
+    transform: scale(1.05);
+}
+
+.rating-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(17, 24, 39, 0.85);
+    backdrop-filter: blur(4px);
+    color: var(--cr-accent-gold);
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    border: 1px solid rgba(245, 197, 24, 0.3);
+}
+
+.cert-badge {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* Interactive Seat Map */
+.seat-screen-container {
+    perspective: 800px;
+    text-align: center;
+}
+
+.screen-curved {
+    height: 18px;
+    width: 80%;
+    margin: 0 auto 30px auto;
+    background: linear-gradient(180deg, #E50914 0%, rgba(229, 9, 20, 0.1) 100%);
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    box-shadow: 0 8px 30px rgba(229, 9, 20, 0.4);
+    transform: rotateX(-20deg);
+}
+
+.seat-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.seat-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px 8px 3px 3px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    border: 1px solid transparent;
+    user-select: none;
+}
+
+.seat-btn.available {
+    background-color: var(--cr-seat-available);
+    color: #D1D5DB;
+    border-color: #4B5563;
+}
+
+.seat-btn.available:hover {
+    background-color: #4B5563;
+    transform: scale(1.12);
+}
+
+.seat-btn.selected {
+    background-color: var(--cr-seat-selected);
+    color: #FFFFFF;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+    transform: scale(1.08);
+}
+
+.seat-btn.booked {
+    background-color: #1F2937;
+    color: #6B7280;
+    cursor: not-allowed;
+    border-color: #374151;
+    opacity: 0.45;
+}
+
+.seat-btn.locked {
+    background-color: var(--cr-seat-locked);
+    color: #000;
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+/* Seat Tier Badges */
+.tier-regular { border-bottom: 3px solid #60A5FA !important; }
+.tier-premium { border-bottom: 3px solid #A78BFA !important; }
+.tier-vip { border-bottom: 3px solid #F59E0B !important; }
+.tier-recliner { border-bottom: 3px solid #EC4899 !important; }
+
+/* Buttons */
+.btn-cinema-primary {
+    background-color: var(--cr-primary);
+    border-color: var(--cr-primary);
+    color: #FFFFFF;
+    font-weight: 600;
+    padding: 0.6rem 1.4rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-cinema-primary:hover {
+    background-color: var(--cr-primary-hover);
+    border-color: var(--cr-primary-hover);
+    color: #FFFFFF;
+    box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+}
+
+.btn-cinema-outline {
+    background: transparent;
+    border: 1px solid var(--cr-border);
+    color: #F3F4F6;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-cinema-outline:hover {
+    border-color: var(--cr-primary);
+    color: var(--cr-primary);
+    background: rgba(229, 9, 20, 0.05);
+}
+
+/* Coupon Card */
+.coupon-card {
+    background: linear-gradient(135deg, #1E1B4B 0%, #1F2937 100%);
+    border: 1px dashed rgba(245, 197, 24, 0.5);
+    border-radius: 12px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Digital Ticket */
+.ticket-container {
+    background: #111827;
+    border: 1px solid var(--cr-border);
+    border-radius: 16px;
+    position: relative;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+}
+
+.ticket-notch-left, .ticket-notch-right {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    background-color: var(--cr-bg-main);
+    border-radius: 50%;
+    top: 60%;
+}
+
+.ticket-notch-left { left: -12px; }
+.ticket-notch-right { right: -12px; }
+
+/* Floating AI Chatbot Widget */
+.chatbot-bubble-btn {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #E50914 0%, #8B5CF6 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 25px rgba(229, 9, 20, 0.5);
+    cursor: pointer;
+    z-index: 1050;
+    transition: transform 0.2s ease;
+    border: none;
+}
+
+.chatbot-bubble-btn:hover {
+    transform: scale(1.08);
+}
+
+.chatbot-window {
+    position: fixed;
+    bottom: 100px;
+    right: 28px;
+    width: 380px;
+    height: 520px;
+    background-color: #111827;
+    border: 1px solid var(--cr-border);
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    display: none;
+    flex-direction: column;
+    z-index: 1050;
+    overflow: hidden;
+}
+
+.chatbot-window.active {
+    display: flex;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-bubble {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.chat-bubble.bot {
+    background-color: #1F2937;
+    color: #F3F4F6;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+    border: 1px solid #374151;
+}
+
+.chat-bubble.user {
+    background-color: var(--cr-primary);
+    color: #ffffff;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+
+/* Footer */
+footer {
+    background-color: #080B12;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--cr-text-muted);
+}

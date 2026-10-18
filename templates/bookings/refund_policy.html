@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancellation & Refund Policy – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card bg-dark border-secondary rounded-4 p-4 p-md-5 shadow-lg">
+                <h2 class="fw-bold text-light mb-3"><i class="bi bi-arrow-counterclockwise text-danger me-2"></i> Cancellation & Refund Policy</h2>
+                <p class="text-secondary small mb-4">Last Updated: September 2026</p>
+
+                <h5 class="text-light fw-bold mb-2">1. Tiered Refund Timetable</h5>
+                <p class="text-secondary">
+                    CineReserve enforces an automated, time-tiered refund mechanism for customer convenience and auditorium seat inventory balance:
+                </p>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-dark table-bordered border-secondary">
+                        <thead>
+                            <tr class="table-secondary text-dark">
+                                <th>Cancellation Window</th>
+                                <th>Refund Rate</th>
+                                <th>Applicability</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>More than 24 Hours prior to Showtime</td>
+                                <td class="text-success fw-bold">100% Ticket Refund</td>
+                                <td>Full ticket amount refunded to original payment method.</td>
+                            </tr>
+                            <tr>
+                                <td>Between 2 and 24 Hours prior to Showtime</td>
+                                <td class="text-warning fw-bold">75% Ticket Refund</td>
+                                <td>75% of base ticket cost refunded; 25% retained for seat allocation.</td>
+                            </tr>
+                            <tr>
+                                <td>Less than 2 Hours prior to Showtime</td>
+                                <td class="text-danger fw-bold">No Refund (0%)</td>
+                                <td>Late cancellations are non-refundable as auditoriums prepare for entry.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h5 class="text-light fw-bold mb-2">2. Processing Timelines</h5>
+                <p class="text-secondary">
+                    Approved refunds are credited directly back to the source payment method (UPI, Card, or Digital Wallet) within 3 to 5 banking business days.
+                </p>
+
+                <h5 class="text-light fw-bold mb-2">3. Convenience Fees</h5>
+                <p class="text-secondary mb-0">
+                    Internet convenience fees and applicable statutory taxes levied during initial booking are non-refundable statutory processing fees.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

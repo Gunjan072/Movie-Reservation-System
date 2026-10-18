@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}404 – Page Not Found | CineReserve{% endblock %}
+{% block content %}
+<div class="container text-center py-5 my-5">
+    <div class="display-1 fw-bold text-danger mb-0">404</div>
+    <h2 class="text-light fw-bold mb-3">Page Not Found</h2>
+    <p class="text-secondary mb-4">The page you're looking for doesn't exist or has been moved.</p>
+    <a href="{% url 'home' %}" class="btn btn-cinema-primary px-4">
+        <i class="bi bi-house me-2"></i>Back to Home
+    </a>
+</div>
+{% endblock %}

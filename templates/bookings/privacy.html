@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Policy – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card bg-dark border-secondary rounded-4 p-4 p-md-5 shadow-lg">
+                <h2 class="fw-bold text-light mb-3"><i class="bi bi-shield-lock-fill text-danger me-2"></i> Privacy Policy</h2>
+                <p class="text-secondary small mb-4">Effective Date: September 2026</p>
+
+                <h5 class="text-light fw-bold">1. Data Collected</h5>
+                <p class="text-secondary">We collect username, email address, mobile number, date of birth, and booking histories to facilitate movie ticket reservations and recommend tailored movie experiences.</p>
+
+                <h5 class="text-light fw-bold">2. Payment Security Guarantee</h5>
+                <p class="text-secondary">CineReserve does NOT store raw card details, credit card security numbers (CVV), or banking passwords. Transactions are processed via encrypted tokens complying with PCI-DSS standards.</p>
+
+                <h5 class="text-light fw-bold">3. Machine Learning Usage</h5>
+                <p class="text-secondary">Browsing behaviors, genres booked, and wishlist selections are processed by our TF-IDF and Cosine Similarity AI recommendation algorithms to tailor movie suggestions without third-party data tracking.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

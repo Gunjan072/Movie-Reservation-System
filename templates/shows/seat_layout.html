@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Select Seats – {{ show.movie.title }} | CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+    <!-- Show Header Summary -->
+    <div class="card bg-dark border-secondary rounded-4 p-4 mb-4 shadow">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <span class="badge bg-danger mb-1">{{ show.format }} • {{ show.language }}</span>
+                <h3 class="fw-bold text-light mb-1">{{ show.movie.title }}</h3>
+                <p class="text-secondary small mb-0">
+                    <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ show.screen.cinema.name }} | 
+                    <strong>{{ show.screen.name }}</strong> | 
+                    <i class="bi bi-calendar3 me-1"></i> {{ show.date|date:"D, d M Y" }} at 
+                    <strong class="text-warning">{{ show.start_time|time:"h:i A" }}</strong>
+                </p>
+            </div>
+            <div>
+                <a href="{% url 'movies:movie_detail' show.movie.slug %}" class="btn btn-cinema-outline btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Movie
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seat Map Container -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card bg-dark border-secondary rounded-4 p-4 shadow-lg text-center">
+
+                <!-- Curved Cinema Screen -->
+                <div class="seat-screen-container mb-5">
+                    <div class="screen-curved"></div>
+                    <small class="text-secondary tracking-widest text-uppercase fw-bold" style="letter-spacing: 4px;">
+                        <i class="bi bi-display me-1"></i> Screen Direction
+                    </small>
+                </div>
+
+                <!-- Seat Grid -->
+                <div class="seat-map-wrapper mb-5 overflow-auto py-2">
+                    {% for row_letter, seats in rows_dict.items %}
+                        <div class="seat-row">
+                            <!-- Left Row Label -->
+                            <span class="text-secondary fw-bold small me-2" style="width: 20px;">{{ row_letter }}</span>
+
+                            <!-- Row Seats -->
+                            {% for s in seats %}
+                                <div class="seat-btn {{ s.status|lower }} tier-{{ s.tier|lower }}"
+                                     data-show-seat-id="{{ s.show_seat_id }}"
+                                     data-seat-label="{{ s.seat_label }}"
+                                     data-price="{{ s.price }}"
+                                     data-tier="{{ s.tier_display }}"
+                                     title="Seat {{ s.seat_label }} ({{ s.tier_display }}) - ₹{{ s.price|floatformat:0 }}">
+                                    {{ s.number }}
+                                </div>
+                            {% endfor %}
+
+                            <!-- Right Row Label -->
+                            <span class="text-secondary fw-bold small ms-2" style="width: 20px;">{{ row_letter }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Seat Legend -->
+                <div class="p-3 bg-black rounded-3 border border-secondary d-flex flex-wrap justify-content-center gap-4 small text-secondary">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="seat-btn available" style="width: 20px; height: 20px;"></div>
+                        <span>Available</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="seat-btn selected" style="width: 20px; height: 20px;"></div>
+                        <span>Selected</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="seat-btn locked" style="width: 20px; height: 20px;"></div>
+                        <span>Locked</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="seat-btn booked" style="width: 20px; height: 20px;"></div>
+                        <span>Booked</span>
+                    </div>
+                </div>
+
+                <!-- Tier Pricing Badges -->
+                <div class="mt-3 d-flex flex-wrap justify-content-center gap-3">
+                    {% for tier in seat_tiers %}
+                        <span class="badge bg-black border border-secondary text-light p-2">
+                            <span class="text-warning fw-bold">{{ tier.name }}:</span> ₹{{ tier.price|floatformat:0 }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Cart & Reservation Summary Column -->
+        <div class="col-lg-4">
+            <div class="card bg-dark border-secondary rounded-4 p-4 shadow-lg sticky-top" style="top: 80px;">
+                <h5 class="fw-bold text-light mb-3 pb-2 border-bottom border-secondary">
+                    <i class="bi bi-cart3 text-danger me-2"></i> Booking Summary
+                </h5>
+
+                <div class="mb-3">
+                    <div class="text-secondary small">Selected Seats:</div>
+                    <div id="selectedSeatsBadges" class="d-flex flex-wrap gap-2 mt-2">
+                        <span class="text-secondary small fst-italic" id="noSeatsNotice">No seats selected yet. Click on available seats to select.</span>
+                    </div>
+                </div>
+
+                <div class="mb-4 pt-3 border-top border-secondary">
+                    <div class="d-flex justify-content-between text-secondary small mb-2">
+                        <span>Total Seats:</span>
+                        <span id="selectedSeatsCount" class="text-light fw-bold">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary small mb-2">
+                        <span>Ticket Amount:</span>
+                        <span id="ticketAmount" class="text-light fw-bold">₹0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary small mb-2">
+                        <span>Convenience Fee:</span>
+                        <span class="text-light">₹30.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-secondary small mb-3">
+                        <span>Taxes (18% GST):</span>
+                        <span id="taxAmount" class="text-light">₹0.00</span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary">
+                        <span class="fs-5 fw-bold text-light">Estimated Total:</span>
+                        <span id="estimatedTotal" class="fs-4 fw-bold text-danger">₹0.00</span>
+                    </div>
+                </div>
+
+                <!-- Real-World Seat Locking Notice -->
+                <div class="alert alert-warning py-2 small mb-4">
+                    <i class="bi bi-shield-lock-fill me-1"></i> <strong>Seat Lock Guarantee:</strong> Clicking proceed will temporarily lock your seats for 5 minutes, preventing double-booking while you complete checkout.
+                </div>
+
+                {% if user.is_authenticated %}
+                    <button id="proceedLockBtn" class="btn btn-cinema-primary w-100 py-3 fs-5" disabled>
+                        <i class="bi bi-lock-fill me-1"></i> Lock Seats & Pay
+                    </button>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}?next={{ request.path }}" class="btn btn-cinema-primary w-100 py-3">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Reserve Seats
+                    </a>
+                {% endif %}
+
+                <!-- Error Container -->
+                <div id="lockErrorAlert" class="alert alert-danger py-2 small mt-3 d-none"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const seatBtns = document.querySelectorAll('.seat-btn.available, .seat-btn.selected');
+        const selectedSeatsBadges = document.getElementById('selectedSeatsBadges');
+        const noSeatsNotice = document.getElementById('noSeatsNotice');
+        const selectedSeatsCount = document.getElementById('selectedSeatsCount');
+        const ticketAmountEl = document.getElementById('ticketAmount');
+        const taxAmountEl = document.getElementById('taxAmount');
+        const estimatedTotalEl = document.getElementById('estimatedTotal');
+        const proceedLockBtn = document.getElementById('proceedLockBtn');
+        const lockErrorAlert = document.getElementById('lockErrorAlert');
+
+        let selectedSeats = [];
+
+        seatBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const seatId = parseInt(btn.dataset.showSeatId);
+                const label = btn.dataset.seatLabel;
+                const price = parseFloat(btn.dataset.price);
+
+                if (btn.classList.contains('selected')) {
+                    // Deselect
+                    btn.classList.remove('selected');
+                    btn.classList.add('available');
+                    selectedSeats = selectedSeats.filter(s => s.id !== seatId);
+                } else {
+                    // Maximum limit 10 seats
+                    if (selectedSeats.length >= 10) {
+                        alert("You can select a maximum of 10 seats at a time.");
+                        return;
+                    }
+                    btn.classList.remove('available');
+                    btn.classList.add('selected');
+                    selectedSeats.push({ id: seatId, label: label, price: price });
+                }
+                updateCart();
+            });
+        });
+
+        function updateCart() {
+            if (selectedSeats.length === 0) {
+                noSeatsNotice.style.display = 'inline';
+                selectedSeatsBadges.querySelectorAll('.badge').forEach(b => b.remove());
+                selectedSeatsCount.textContent = '0';
+                ticketAmountEl.textContent = '₹0.00';
+                taxAmountEl.textContent = '₹0.00';
+                estimatedTotalEl.textContent = '₹0.00';
+                if (proceedLockBtn) proceedLockBtn.disabled = true;
+                return;
+            }
+
+            noSeatsNotice.style.display = 'none';
+            selectedSeatsBadges.querySelectorAll('.badge').forEach(b => b.remove());
+
+            let totalTicket = 0;
+            selectedSeats.forEach(s => {
+                totalTicket += s.price;
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-danger px-2 py-1 fs-6';
+                badge.textContent = s.label;
+                selectedSeatsBadges.appendChild(badge);
+            });
+
+            const convenienceFee = 30.00;
+            const taxable = totalTicket + convenienceFee;
+            const tax = Math.round(taxable * 0.18 * 100) / 100;
+            const grandTotal = Math.round((taxable + tax) * 100) / 100;
+
+            selectedSeatsCount.textContent = selectedSeats.length;
+            ticketAmountEl.textContent = `₹${totalTicket.toFixed(2)}`;
+            taxAmountEl.textContent = `₹${tax.toFixed(2)}`;
+            estimatedTotalEl.textContent = `₹${grandTotal.toFixed(2)}`;
+            if (proceedLockBtn) proceedLockBtn.disabled = false;
+        }
+
+        if (proceedLockBtn) {
+            proceedLockBtn.addEventListener('click', async () => {
+                if (selectedSeats.length === 0) return;
+
+                proceedLockBtn.disabled = true;
+                proceedLockBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Locking Seats...';
+                lockErrorAlert.classList.add('d-none');
+
+                try {
+                    const response = await fetch("{% url 'shows:lock_seats_api' %}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({
+                            show_id: {{ show.id }},
+                            seat_ids: selectedSeats.map(s => s.id)
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        lockErrorAlert.textContent = data.error || 'Failed to lock seats. Please refresh and try again.';
+                        lockErrorAlert.classList.remove('d-none');
+                        proceedLockBtn.disabled = false;
+                        proceedLockBtn.innerHTML = '<i class="bi bi-lock-fill me-1"></i> Lock Seats & Pay';
+                    }
+                } catch (err) {
+                    lockErrorAlert.textContent = 'A network error occurred while locking seats. Please try again.';
+                    lockErrorAlert.classList.remove('d-none');
+                    proceedLockBtn.disabled = false;
+                    proceedLockBtn.innerHTML = '<i class="bi bi-lock-fill me-1"></i> Lock Seats & Pay';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

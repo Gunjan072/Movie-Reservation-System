@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row g-4">
+        <!-- Sidebar Profile Card -->
+        <div class="col-lg-4">
+            <div class="card bg-dark border-secondary rounded-4 p-4 text-center">
+                <div class="position-relative d-inline-block mx-auto mb-3">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" class="rounded-circle border border-danger p-1" width="120" height="120" style="object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center mx-auto shadow" style="width: 120px; height: 120px; font-size: 3rem; font-weight: 700;">
+                            {{ user.username|slice:":1"|upper }}
+                        </div>
+                    {% endif %}
+                    <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-danger border border-dark">
+                        {{ user.get_role_display }}
+                    </span>
+                </div>
+
+                <h4 class="fw-bold text-light mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                <p class="text-secondary small mb-3">@{{ user.username }} • Joined {{ user.date_joined|date:"M Y" }}</p>
+
+                <!-- Loyalty / Rewards Counter -->
+                <div class="p-3 rounded-3 bg-black border border-secondary mb-4">
+                    <div class="text-warning small text-uppercase fw-bold"><i class="bi bi-gem me-1"></i> CineReserve Loyalty</div>
+                    <div class="fs-3 fw-bold text-light">{{ profile.loyalty_points }} <span class="fs-6 text-secondary">pts</span></div>
+                    <small class="text-secondary">Earn 10 points per ₹100 spent</small>
+                </div>
+
+                <!-- Fast Nav Links -->
+                <div class="list-group list-group-flush rounded-3 text-start">
+                    <a href="{% url 'bookings:my_bookings' %}" class="list-group-item list-group-item-action bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-ticket-perforated text-danger me-2"></i> My Bookings</span>
+                        <span class="badge bg-secondary rounded-pill">{{ total_bookings }}</span>
+                    </a>
+                    <a href="{% url 'movies:wishlist' %}" class="list-group-item list-group-item-action bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-heart text-danger me-2"></i> Wishlist</span>
+                        <span class="badge bg-secondary rounded-pill">{{ wishlist_count }}</span>
+                    </a>
+                    <a href="{% url 'accounts:notifications' %}" class="list-group-item list-group-item-action bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-bell text-warning me-2"></i> In-App Alerts</span>
+                        <span class="badge bg-danger rounded-pill">{{ unread_notifications_count }}</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Profile Edit Form -->
+        <div class="col-lg-8">
+            <div class="card bg-dark border-secondary rounded-4 p-4 mb-4">
+                <h5 class="fw-bold text-light mb-4"><i class="bi bi-person-gear text-danger me-2"></i> Personal Information</h5>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="update_profile" value="1">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">First Name</label>
+                            {{ user_form.first_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">Last Name</label>
+                            {{ user_form.last_name }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">Email Address</label>
+                            {{ user_form.email }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">Mobile Phone</label>
+                            {{ user_form.phone_number }}
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">Date of Birth</label>
+                            {{ user_form.date_of_birth }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">Update Profile Picture</label>
+                            {{ user_form.profile_picture }}
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-cinema-primary">
+                            <i class="bi bi-check2-circle me-1"></i> Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Cinema Preferences -->
+            <div class="card bg-dark border-secondary rounded-4 p-4">
+                <h5 class="fw-bold text-light mb-4"><i class="bi bi-sliders text-danger me-2"></i> Cinema & AI Preferences</h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="update_preferences" value="1">
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">Preferred Language</label>
+                            {{ pref_form.preferred_language }}
+                            <small class="text-muted">Used by the recommendation engine</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary small fw-bold">Favorite Genre(s)</label>
+                            {{ pref_form.favorite_genre }}
+                            <small class="text-muted">e.g. Action, Sci-Fi, Thriller</small>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-cinema-outline">
+                            <i class="bi bi-save me-1"></i> Update Preferences
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

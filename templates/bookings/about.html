@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}About CineReserve | Smart Movie Reservation{% endblock %}
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <span class="badge bg-danger mb-3">BCA AIML Capstone</span>
+            <h1 class="fw-bold text-light mb-3">CineReserve – Smart Movie Reservation &amp; Cinema Management</h1>
+            <p class="text-secondary fs-5">
+                An original, production-style cinema booking platform built with Django, PostgreSQL/SQLite,
+                REST APIs, transactional seat locking, simulated payments, QR/PDF tickets, and a Scikit-Learn
+                recommendation engine.
+            </p>
+            <div class="row g-3 my-4">
+                <div class="col-md-4">
+                    <div class="card bg-dark border-secondary rounded-4 p-3 h-100">
+                        <h6 class="text-warning">Engineering</h6>
+                        <p class="small text-secondary mb-0">Role-based access, CSRF, hashed passwords, relational design, and ACID seat locks with <code>select_for_update</code>.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-dark border-secondary rounded-4 p-3 h-100">
+                        <h6 class="text-info">Booking workflow</h6>
+                        <p class="small text-secondary mb-0">Movie → cinema → date → showtime → seats → coupon → payment → QR ticket → history &amp; refunds.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-dark border-secondary rounded-4 p-3 h-100">
+                        <h6 class="text-success">AIML</h6>
+                        <p class="small text-secondary mb-0">TF-IDF + cosine similarity recommendations from live bookings, wishlist, and genre preferences, plus a rule-based NLP chatbot.</p>
+                    </div>
+                </div>
+            </div>
+            <p class="text-secondary">Contact: support@cinereserve.local · Mumbai, India</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,275 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ movie.title }} – Details & Tickets | CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+
+    <!-- Movie Overview Hero Banner -->
+    <div class="card bg-dark border-secondary rounded-4 overflow-hidden mb-5 shadow-lg">
+        <div class="row g-0">
+            <!-- Movie Poster Column -->
+            <div class="col-lg-4 col-md-5 position-relative" style="background-color: #1a2233; min-height: 480px;">
+                {% if movie.poster %}
+                    <img src="{{ movie.poster.url }}" class="w-100 h-100 object-fit-cover" alt="{{ movie.title }}">
+                {% else %}
+                    <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-center text-secondary p-4 text-center">
+                        <i class="bi bi-film text-danger" style="font-size: 4rem;"></i>
+                        <h4 class="text-light mt-3">{{ movie.title }}</h4>
+                    </div>
+                {% endif %}
+                <span class="position-absolute top-0 start-0 m-3 badge bg-danger fs-6">
+                    {{ movie.get_status_display }}
+                </span>
+            </div>
+
+            <!-- Movie Details Column -->
+            <div class="col-lg-8 col-md-7 p-4 p-lg-5 d-flex flex-column justify-content-between">
+                <div>
+                    <!-- Title & Rating -->
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h1 class="display-5 fw-bold text-light mb-0">{{ movie.title }}</h1>
+                        <div class="text-end">
+                            <div class="d-flex align-items-center text-warning fs-4 fw-bold">
+                                <i class="bi bi-star-fill me-1"></i> {{ movie.rating }}<span class="fs-6 text-secondary">/10</span>
+                            </div>
+                            <small class="text-secondary">{{ movie.votes_count }} verified votes</small>
+                        </div>
+                    </div>
+
+                    <!-- Meta Specs Bar -->
+                    <div class="d-flex flex-wrap align-items-center gap-3 text-secondary mb-4 pb-3 border-bottom border-secondary">
+                        <span class="badge bg-secondary text-light">{{ movie.get_certification_display }}</span>
+                        <span>•</span>
+                        <span><i class="bi bi-clock me-1 text-danger"></i> {{ movie.formatted_duration }}</span>
+                        <span>•</span>
+                        <span><i class="bi bi-translate me-1 text-info"></i> {{ movie.language }}</span>
+                        <span>•</span>
+                        <span><i class="bi bi-calendar3 me-1"></i> {{ movie.release_date|date:"d M, Y" }}</span>
+                    </div>
+
+                    <!-- Genres -->
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        {% for genre in movie.genres.all %}
+                            <span class="badge bg-black border border-secondary text-light px-3 py-2">{{ genre.name }}</span>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Synopsis -->
+                    <h5 class="fw-bold text-light mb-2">Synopsis</h5>
+                    <p class="text-secondary leading-relaxed mb-4">
+                        {{ movie.synopsis }}
+                    </p>
+
+                    <!-- Cast & Crew -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6">
+                            <span class="text-secondary small d-block">Director</span>
+                            <span class="text-light fw-semibold">{{ movie.director }}</span>
+                        </div>
+                        <div class="col-sm-6">
+                            <span class="text-secondary small d-block">Lead Cast</span>
+                            <span class="text-light fw-semibold">
+                                {% for actor in movie.cast.all %}
+                                    {{ actor.name }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    All-Star Ensemble Cast
+                                {% endfor %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="d-flex flex-wrap gap-3 align-items-center pt-3 border-top border-secondary">
+                    {% if movie.status == 'NOW_SHOWING' %}
+                        <a href="#showtimesSection" class="btn btn-cinema-primary btn-lg px-4">
+                            <i class="bi bi-ticket-perforated-fill me-2"></i> Book Tickets
+                        </a>
+                    {% endif %}
+
+                    {% if movie.trailer_url %}
+                        <a href="{{ movie.trailer_url }}" target="_blank" class="btn btn-outline-light btn-lg px-3">
+                            <i class="bi bi-play-circle-fill text-danger me-2"></i> Watch Trailer
+                        </a>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'movies:toggle_wishlist' movie.id %}" class="btn btn-dark border-secondary btn-lg px-3" title="Toggle Wishlist">
+                            <i class="bi bi-heart{% if in_wishlist %}-fill text-danger{% endif %} me-1"></i>
+                            {% if in_wishlist %}In Wishlist{% else %}Wishlist{% endif %}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Theaters & Showtimes Section -->
+    <div id="showtimesSection" class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h3 class="fw-bold text-light mb-0">Select Cinema & Showtime</h3>
+                <small class="text-secondary">Click on any showtime to choose seats and reserve your tickets</small>
+            </div>
+        </div>
+
+        {% if cinemas_with_shows %}
+            <div class="d-flex flex-column gap-4">
+                {% for cinema, shows_list in cinemas_with_shows.items %}
+                    <div class="card bg-dark border-secondary rounded-4 p-4 shadow">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-3 mb-3 border-bottom border-secondary gap-2">
+                            <div>
+                                <h4 class="fw-bold text-light mb-1">{{ cinema.name }}</h4>
+                                <p class="text-secondary small mb-0"><i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ cinema.address }}, {{ cinema.city }}</p>
+                            </div>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for fac in cinema.facilities_list|slice:":3" %}
+                                    <span class="badge bg-black border border-secondary text-secondary small">{{ fac }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Shows Grid -->
+                        <div class="row g-3">
+                            {% for show in shows_list %}
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <a href="{% url 'shows:seat_layout' show.id %}" class="card text-decoration-none bg-black border border-secondary rounded-3 p-3 h-100 hover-shadow transition">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="badge bg-danger">{{ show.format }}</span>
+                                            <span class="text-light fw-bold fs-5">{{ show.start_time|time:"h:i A" }}</span>
+                                        </div>
+                                        <div class="text-secondary small mb-1">{{ show.screen.name }}</div>
+                                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top border-secondary">
+                                            <span class="text-warning fw-bold small">₹{{ show.base_price|floatformat:0 }} onwards</span>
+                                            <span class="text-success small"><i class="bi bi-check-circle me-1"></i>Available</span>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card bg-dark border-secondary rounded-4 p-5 text-center">
+                <i class="bi bi-calendar-x text-secondary fs-1 mb-3"></i>
+                <h5 class="text-light">No shows scheduled at this moment</h5>
+                <p class="text-secondary small">Please check back soon for updated multiplex schedules.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Verified User Reviews & Ratings -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-8">
+            <div class="card bg-dark border-secondary rounded-4 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom border-secondary">
+                    <h4 class="fw-bold text-light mb-0">Customer Reviews</h4>
+                    <span class="badge bg-secondary">{{ reviews.count }} Reviews</span>
+                </div>
+
+                <!-- Add Review Box (Enforcing Verified Buyer Requirement) -->
+                {% if user.is_authenticated %}
+                    {% if user_review %}
+                        <div class="alert alert-info py-2 small mb-4">
+                            <i class="bi bi-info-circle me-2"></i> You reviewed this movie: <strong>{{ user_review.rating }}/5 Stars</strong> ("{{ user_review.headline }}").
+                        </div>
+                    {% elif has_booked %}
+                        <div class="card bg-black border-secondary rounded-3 p-3 mb-4">
+                            <h6 class="text-light fw-bold mb-3"><i class="bi bi-pencil-square text-danger me-2"></i> Leave a Verified Review</h6>
+                            <form action="{% url 'reviews:add_review' movie.id %}" method="POST">
+                                {% csrf_token %}
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label text-secondary small fw-bold">Rating</label>
+                                        <select name="rating" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                            <option value="5">⭐⭐⭐⭐⭐ (5/5)</option>
+                                            <option value="4">⭐⭐⭐⭐ (4/5)</option>
+                                            <option value="3">⭐⭐⭐ (3/5)</option>
+                                            <option value="2">⭐⭐ (2/5)</option>
+                                            <option value="1">⭐ (1/5)</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <label class="form-label text-secondary small fw-bold">Headline</label>
+                                        <input type="text" name="headline" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Summarize your review..." required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-secondary small fw-bold">Your Review</label>
+                                    <textarea name="comment" rows="3" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="What did you think of the direction, visual effects, and story?" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-cinema-primary btn-sm">Submit Verified Review</button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <div class="p-3 rounded-3 bg-black border border-secondary text-secondary small mb-4">
+                            <i class="bi bi-shield-lock text-warning me-1"></i> <strong>Verified Reviews Policy:</strong> Only customers with a confirmed booking for this movie can write a review. Book your ticket above to share your feedback!
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="p-3 rounded-3 bg-black border border-secondary text-secondary small mb-4">
+                        <a href="{% url 'accounts:login' %}" class="text-danger fw-bold">Sign in</a> to leave a review after watching this movie.
+                    </div>
+                {% endif %}
+
+                <!-- Reviews List -->
+                <div class="d-flex flex-column gap-3">
+                    {% for rev in reviews %}
+                        <div class="p-3 rounded-3 bg-black border border-secondary">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-light fw-bold">{{ rev.user.get_full_name|default:rev.user.username }}</span>
+                                    {% if rev.is_verified_buyer %}
+                                        <span class="badge bg-success-subtle text-success border border-success small" style="font-size: 0.7rem;">
+                                            <i class="bi bi-patch-check-fill me-1"></i> Verified Buyer
+                                        </span>
+                                    {% endif %}
+                                </div>
+                                <small class="text-secondary">{{ rev.created_at|date:"d M, Y" }}</small>
+                            </div>
+                            <div class="text-warning small mb-2">
+                                {% for i in "12345"|make_list %}
+                                    <i class="bi bi-star{% if forloop.counter <= rev.rating %}-fill{% endif %}"></i>
+                                {% endfor %}
+                                <span class="text-light ms-2 fw-bold">{{ rev.headline }}</span>
+                            </div>
+                            <p class="text-secondary small mb-0">{{ rev.comment }}</p>
+                        </div>
+                    {% empty %}
+                        <p class="text-secondary small text-center py-4 mb-0">No reviews yet. Be the first to book and share your experience!</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Similar Movies Column -->
+        <div class="col-lg-4">
+            <div class="card bg-dark border-secondary rounded-4 p-4">
+                <h5 class="fw-bold text-light mb-3">Similar Movies You May Like</h5>
+                <div class="d-flex flex-column gap-3">
+                    {% for sim in similar_movies %}
+                        <a href="{% url 'movies:movie_detail' sim.slug %}" class="text-decoration-none d-flex gap-3 align-items-center p-2 rounded-3 bg-black border border-secondary hover-shadow">
+                            <div style="width: 60px; height: 80px; flex-shrink: 0; background: #1e293b;" class="rounded overflow-hidden">
+                                {% if sim.poster %}
+                                    <img src="{{ sim.poster.url }}" class="w-100 h-100 object-fit-cover" alt="{{ sim.title }}">
+                                {% endif %}
+                            </div>
+                            <div class="overflow-hidden">
+                                <h6 class="text-light fw-bold text-truncate mb-1">{{ sim.title }}</h6>
+                                <div class="text-warning small mb-1"><i class="bi bi-star-fill me-1"></i>{{ sim.rating }}/10</div>
+                                <span class="badge bg-dark border border-secondary text-secondary small">{{ sim.language }}</span>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <p class="text-secondary small mb-0">No similar movies currently listed.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

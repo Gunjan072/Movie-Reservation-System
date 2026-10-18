@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Failed – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card bg-dark border-secondary rounded-4 shadow-lg p-5 text-center">
+                <div class="d-inline-flex p-3 rounded-circle bg-danger text-white mx-auto mb-4 shadow">
+                    <i class="bi bi-x-lg" style="font-size: 3rem;"></i>
+                </div>
+                <h3 class="fw-bold text-light mb-2">Payment Simulation Failed</h3>
+                <p class="text-secondary mb-4">
+                    Your financial transaction was either declined, aborted, or timed out. In compliance with real-world cinema reservation rules, your temporarily held seats have been automatically unlocked and returned to the pool.
+                </p>
+
+                <div class="d-flex justify-content-center gap-3">
+                    <a href="{% url 'movies:movie_list' %}" class="btn btn-cinema-primary">
+                        <i class="bi bi-arrow-repeat me-1"></i> Browse Movies Again
+                    </a>
+                    <a href="{% url 'home' %}" class="btn btn-cinema-outline">
+                        <i class="bi bi-house me-1"></i> Return Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Cinemas & Theaters – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-light mb-1">Cinemas & Multiplexes</h2>
+            <p class="text-secondary small mb-0">Experience blockbusters in world-class projection & audio theaters.</p>
+        </div>
+        
+        <!-- City Filter Dropdown -->
+        {% if cities %}
+            <form method="GET" class="d-flex align-items-center gap-2">
+                <select name="city" class="form-select bg-dark text-light border-secondary form-select-sm" onchange="this.form.submit()">
+                    <option value="">All Cities</option>
+                    {% for c in cities %}
+                        <option value="{{ c }}" {% if selected_city == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="row g-4">
+        {% for cinema in cinemas %}
+            <div class="col-lg-4 col-md-6">
+                <div class="card bg-dark border-secondary rounded-4 h-100 p-4 shadow-sm hover-shadow d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h4 class="fw-bold text-light mb-0">{{ cinema.name }}</h4>
+                            <span class="badge bg-danger"><i class="bi bi-geo-alt-fill me-1"></i>{{ cinema.city }}</span>
+                        </div>
+                        <p class="text-secondary small mb-3">{{ cinema.address }}</p>
+
+                        <!-- Contact & Email -->
+                        <div class="text-secondary small mb-3">
+                            <div><i class="bi bi-telephone text-danger me-1"></i> {{ cinema.contact_number }}</div>
+                            {% if cinema.email %}
+                                <div><i class="bi bi-envelope text-info me-1"></i> {{ cinema.email }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Screens Count -->
+                        <div class="mb-3">
+                            <div class="text-secondary small fw-bold mb-1">Auditoriums / Screens:</div>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for screen in cinema.screens.all %}
+                                    <span class="badge bg-black border border-secondary text-light">{{ screen.name }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Amenities -->
+                        <div class="mb-4">
+                            <div class="text-secondary small fw-bold mb-1">Facilities:</div>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for fac in cinema.facilities_list %}
+                                    <span class="badge bg-secondary text-light small">{{ fac }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="{% url 'cinemas:cinema_detail' cinema.slug %}" class="btn btn-cinema-primary w-100">
+                        View Show Schedules
+                    </a>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-building-x text-secondary fs-1 mb-3"></i>
+                <h4 class="text-light">No cinemas found</h4>
+                <p class="text-secondary small">Try changing the city filter to see cinemas in other locations.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

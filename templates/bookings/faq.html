@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}FAQs & Support – CineReserve{% endblock %}
+
+{% block content %}
+<div class="container-xl py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="text-center mb-5">
+                <span class="badge bg-danger text-uppercase px-3 py-2 mb-2 fw-bold">Support Center</span>
+                <h2 class="fw-bold text-light mb-2">Frequently Asked Questions</h2>
+                <p class="text-secondary small">Everything you need to know about reserving tickets and managing reservations on CineReserve.</p>
+            </div>
+
+            <div class="accordion accordion-flush" id="faqAccordion">
+                <div class="accordion-item bg-dark border-secondary mb-3 rounded-3 overflow-hidden">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-light collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                            How does real-time seat locking work?
+                        </button>
+                    </h2>
+                    <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-secondary">
+                            When you select your seats and click "Proceed to Payment", CineReserve initiates an atomic database lock using <code>select_for_update()</code>. Those seats are held exclusively for you for 5 minutes. If another customer attempts to select the same seats simultaneously, the system prevents double-booking and alerts them.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item bg-dark border-secondary mb-3 rounded-3 overflow-hidden">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-light collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                            Can I cancel my ticket and receive a refund?
+                        </button>
+                    </h2>
+                    <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-secondary">
+                            Yes! Go to "My Bookings" and click "Cancel & Refund". Cancellations more than 24 hours before showtime receive a 100% ticket refund. Cancellations between 2 and 24 hours receive a 75% refund.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item bg-dark border-secondary mb-3 rounded-3 overflow-hidden">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-light collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                            How do I get my tickets at the theater?
+                        </button>
+                    </h2>
+                    <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-secondary">
+                            Once payment is completed, a digital ticket is generated instantly with an encrypted QR code. You can display this QR code on your mobile device at the cinema entrance or download a printable PDF pass.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item bg-dark border-secondary mb-3 rounded-3 overflow-hidden">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button bg-dark text-light collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                            How does the AI Recommendation engine work?
+                        </button>
+                    </h2>
+                    <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body text-secondary">
+                            Our Machine Learning engine uses Scikit-Learn to extract TF-IDF feature vectors from movie synopses, genres, directors, and actors. It then calculates Cosine Similarity scores against your previous bookings and wishlist to recommend movies tailored to your taste.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
