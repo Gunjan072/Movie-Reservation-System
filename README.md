@@ -1,0 +1,2 @@
+# Movie Reservation System 
+ Built a full-stack cinema booking platform with authentication, interactive seat selection, seat locking, showtime management, payments, QR tickets, and booking history. • Developed an admin dashboard with booking/revenue analytics and implemented an AI-based movie recommendation system using user preferences and booking data. • Integrated a secure payment workflow, coupon system, QR-based digital tickets, booking history, and cancellation/refund management
