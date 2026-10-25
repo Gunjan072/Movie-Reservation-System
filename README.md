@@ -1,6 +1,6 @@
 # CineReserve – Smart Movie Reservation & Cinema Management System
 
-CineReserve is a production-style Django web application for movie discovery, real-time seat reservation, simulated payments, QR/PDF ticketing, role-based cinema operations, and an AIML recommendation engine. It is designed as an original BCA AIML final-year capstone, not a thin CRUD demo.
+CineReserve is a full-stack Django cinema booking platform for movie discovery, interactive seat selection, real-time reservations, simulated payments, QR/PDF ticketing, role-based cinema operations, and AI-powered movie recommendations. It is designed as an original BCA AIML final-year capstone, not a thin CRUD demo.
 
 ## Features
 
